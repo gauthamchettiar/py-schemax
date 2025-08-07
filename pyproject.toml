@@ -26,6 +26,7 @@ dev = [
     "pre-commit>=3.5.0",
     "pytest>=8.4.1",
     "safety>=3.2.9",
+    "types-PyYAML>=6.0.12.20240917",
 ]
 
 [tool.pytest.ini_options]
@@ -46,3 +47,33 @@ filterwarnings = [
 [tool.bandit]
 exclude_dirs = ["tests", ".nox"]
 skips = ["B101"]  # Skip assert_used test
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "larch.*",
+    "cachebox.*",
+]
+ignore_missing_imports = true

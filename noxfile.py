@@ -42,7 +42,7 @@ def tests_no_cov(session):
 def lint(session):
     """Run linting and code quality checks."""
     session.install("ruff", "mypy", "black", "isort")
-    session.install(".")
+    session.install(".", "--group", "dev")
 
     # Format check
     session.run("black", "--check", "--diff", ".")
@@ -68,7 +68,7 @@ def format(session):
 def type_check(session):
     """Run type checking with mypy."""
     session.install("mypy")
-    session.install(".")
+    session.install(".", "--group", "dev")
 
     session.run("mypy", "py_schemax")
 

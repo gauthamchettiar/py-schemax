@@ -45,7 +45,7 @@ class OutputControl:
         fail_after: bool | None = None,
         no_summary: bool | None = None,
         show_summary: bool | None = None,
-    ):
+    ) -> None:
         # set defaults
         output_format = output_format or "text"
         use_json = use_json or False
@@ -96,7 +96,7 @@ class OutputControl:
 
     def __print_formatted_validation_output(
         self, validation_output: ValidationOutputSchema
-    ):
+    ) -> None:
         """Print validation output based on the output format and level."""
         if self.output_format == OutputFormatEnum.JSON:
             click.echo(json.dumps(validation_output))
@@ -119,7 +119,7 @@ class OutputControl:
         body = ["│ " + line.ljust(width) + " │" for line in lines]
         return "\n".join([top] + body + [bottom])
 
-    def __print_formatted_summary(self):
+    def __print_formatted_summary(self) -> None:
         """Print summary of validation results."""
         if self.output_format == OutputFormatEnum.JSON:
             click.echo(json.dumps(self.summary.to_dict()))
@@ -132,7 +132,9 @@ class OutputControl:
                 + "\n\n"
             )
 
-    def print_validation_output(self, validation_output: ValidationOutputSchema):
+    def print_validation_output(
+        self, validation_output: ValidationOutputSchema
+    ) -> None:
         """Print validation output based on the output format and level."""
         if not validation_output["valid"]:
             self.summary.add_record(
@@ -152,12 +154,12 @@ class OutputControl:
             ):
                 self.__print_formatted_validation_output(validation_output)
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """Print the summary of validation results."""
         if self.show_summary:
             self.__print_formatted_summary()
 
-    def end_control(self):
+    def end_control(self) -> None:
         if self.summary.invalid_file_count > 0:
             if self.fail_mode in (FailModeEnum.FAIL_AFTER, FailModeEnum.FAIL_FAST):
                 if self.show_summary:

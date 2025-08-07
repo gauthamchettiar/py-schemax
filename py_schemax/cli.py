@@ -14,7 +14,7 @@ from .utils import accept_file_paths_as_stdin, get_hash_of_file
 
 @click.group()
 @click.version_option(version=__version__)
-def main():
+def main() -> None:
     """A CLI tool for schema validation and management.
 
     This is the main entry point for the py-schemax CLI application.
@@ -100,7 +100,7 @@ def validate(
     fail_after: bool,
     no_summary: bool,
     show_summary: bool,
-):
+) -> None:
     """Validate a file against the Defined Schema.
 
     FILE_PATHS: One or More Paths to JSON or YAML file to validate.

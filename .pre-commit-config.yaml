@@ -44,8 +44,17 @@ repos:
     rev: v1.11.1
     hooks:
       - id: mypy
-        additional_dependencies: [types-PyYAML, pydantic]
-        args: [--ignore-missing-imports]
+        additional_dependencies: [
+          types-PyYAML,
+          pydantic,
+          click,
+          cachebox,
+          larch-pickle,
+          xxhash,
+          pydantic-core
+        ]
+        args: [--config-file=pyproject.toml]
+        files: ^py_schemax/
 
   # Minimal testing for pre-commit (Python 3.13 only, no coverage)
   - repo: local

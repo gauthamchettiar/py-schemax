@@ -159,7 +159,7 @@ class Validator:
             case "model_attributes_type":
                 error_string = "expected to be an 'object'"
             case "union_tag_invalid":
-                expected_tags = error["ctx"]["expected_tags"]  # type: ignore[reportArgumentType]
+                expected_tags = error.get("ctx", {}).get("expected_tags", [])
                 error_string = f"'type' expected to be one of {expected_tags}"
             case "union_tag_not_found":
                 error_string = "'type' attribute missing"
