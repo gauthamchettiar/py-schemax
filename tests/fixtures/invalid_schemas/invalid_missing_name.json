@@ -1,0 +1,8 @@
+{
+  "columns": [
+    {
+      "name": "test_field",
+      "type": "string"
+    }
+  ]
+}

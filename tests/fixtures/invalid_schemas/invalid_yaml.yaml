@@ -1,0 +1,8 @@
+name: "Invalid Dataset"
+description: "A dataset with validation errors"
+# Invalid column structure
+columns:
+  - name: "valid column"
+  name: "invalid_column"
+  type: "invalid_type"  # This type doesn't exist
+  nullable: "not_a_boolean"  # Should be boolean

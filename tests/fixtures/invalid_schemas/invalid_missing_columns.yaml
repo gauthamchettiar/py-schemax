@@ -1,0 +1,4 @@
+name: "Missing Columns"
+description: "Schema missing required columns field"
+version: "1.0"
+# Missing columns field

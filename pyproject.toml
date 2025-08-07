@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "py-schemax"
+version = "0.0.1"
+description = "A CLI tool built with Click"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "cachebox>=5.0.1",
+    "click>=8.2.1",
+    "larch-pickle>=1.4.6",
+    "pydantic>=2.11.7",
+    "pyyaml>=6.0.2",
+    "xxhash>=3.5.0",
+]
+
+[project.scripts]
+schemax = "py_schemax.cli:main"
+
+[dependency-groups]
+dev = [
+    "nox>=2024.4.15",
+    "pre-commit>=3.5.0",
+    "pytest>=8.4.1",
+    "safety>=3.2.9",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers"
+testpaths = [
+    "tests",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", ".nox"]
+skips = ["B101"]  # Skip assert_used test

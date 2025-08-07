@@ -1,0 +1,15 @@
+name: "Incompatible Arguments Test"
+description: "Schema with incompatible arguments for various data types"
+version: "1.0"
+columns:
+  - name: "integer_with_timezone"
+    type: "integer"
+    nullable: false
+    timezone: "UTC"  # timezone is only valid for DateTimeType, not IntegerType
+
+  - name: "integer_field"
+    type: "integer"
+    nullable: false
+    minimum: "not_a_number"  # This should be an integer, causing validation to fail
+
+  -

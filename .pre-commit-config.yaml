@@ -1,0 +1,83 @@
+# Pre-commit configuration for py-schemax
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+repos:
+  # Built-in pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^.*-report\.json$
+      - id: end-of-file-fixer
+        exclude: ^.*-report\.json$
+      - id: check-yaml
+        exclude: ^tests/fixtures/invalid_schemas/.*\.yaml$
+      - id: check-json
+        exclude: ^tests/fixtures/invalid_schemas/.*\.json$
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+
+  # Python-specific formatting and linting
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+        language_version: python3.13
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.2
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+
+  # Type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.1
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-PyYAML, pydantic]
+        args: [--ignore-missing-imports]
+
+  # Minimal testing for pre-commit (Python 3.13 only, no coverage)
+  - repo: local
+    hooks:
+      - id: minimal-tests
+        name: Minimal tests (Python 3.13, no coverage)
+        entry: uv run python -m pytest tests/ -x --tb=short
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        files: \.py$
+
+      # Run security checks on pre-push only
+      - id: nox-security
+        name: Security checks (bandit + safety)
+        entry: uv run nox -s security
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        always_run: true
+
+      # Run full test suite on pre-push
+      - id: nox-tests-full
+        name: Full test suite
+        entry: uv run nox -s tests
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        files: \.py$
+
+# Configure which hooks run at which stages
+default_stages: [pre-commit]
+
+# Performance optimization
+minimum_pre_commit_version: '3.5.0'

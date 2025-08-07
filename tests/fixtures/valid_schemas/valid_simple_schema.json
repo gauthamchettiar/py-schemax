@@ -1,0 +1,11 @@
+{
+  "name": "Simple Schema",
+  "fqn": "simple_schema",
+  "columns": [
+    {
+      "name": "status",
+      "type": "string",
+      "nullable": true
+    }
+  ]
+}

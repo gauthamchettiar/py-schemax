@@ -1,0 +1,14 @@
+{
+  "name": "Invalid Types",
+  "columns": [
+    {
+      "name": "bad_field",
+      "type": "nonexistent_type",
+      "nullable": true
+    },
+    {
+      "name": "no_type",
+      "nullable": false
+    }
+  ]
+}

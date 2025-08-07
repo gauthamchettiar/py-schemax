@@ -1,0 +1,62 @@
+name: "User Dataset"
+fqn: "complex_schema"
+description: "A dataset containing user information"
+version: "1.0"
+columns:
+  - name: "user_id"
+    type: "integer"
+    nullable: false
+    description: "Unique identifier for the user"
+    minimum: 1
+
+  - name: "username"
+    type: "string"
+    nullable: false
+    description: "User's username"
+    min_length: 3
+    max_length: 50
+    pattern: "^[a-zA-Z0-9_]+$"
+
+  - name: "email"
+    type: "string"
+    nullable: false
+    description: "User's email address"
+    max_length: 100
+
+  - name: "age"
+    type: "integer"
+    nullable: true
+    description: "User's age"
+    minimum: 0
+    maximum: 150
+
+  - name: "height"
+    type: "float"
+    nullable: true
+    description: "User's height in meters"
+    minimum: 0.0
+    maximum: 3.0
+    precision: 2
+
+  - name: "is_active"
+    type: "boolean"
+    nullable: false
+    description: "Whether the user account is active"
+
+  - name: "signup_date"
+    type: "date"
+    nullable: false
+    description: "Date when user signed up"
+    format: "YYYY-MM-DD"
+
+  - name: "last_login"
+    type: "datetime"
+    nullable: true
+    description: "Last login timestamp"
+    format: "YYYY-MM-DD HH:MM:SS"
+    timezone: "UTC"
+
+metadata:
+  created_by: "Data Team"
+  last_updated: "2025-01-31"
+  source: "user_management_system"
