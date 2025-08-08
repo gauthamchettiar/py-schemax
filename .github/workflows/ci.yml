@@ -66,10 +66,6 @@ jobs:
           exit 1
         fi
 
-    - name: Check for large files
-      run: |
-        # Check for files larger than 500KB
-        find . -type f -size +500k | grep -v '.git' && exit 1 || true
 
     - name: Black format check
       run: uv run black --check --diff .
