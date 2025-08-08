@@ -22,12 +22,18 @@ schemax = "py_schemax.cli:main"
 
 [dependency-groups]
 dev = [
+    "black>=24.8.0",
+    "isort>=5.13.2",
+    "mypy>=1.11.1",
     "nox>=2024.4.15",
     "pip-audit>=2.9.0",
     "pre-commit>=3.5.0",
     "pytest>=8.4.1",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.6.2",
     "safety>=3.2.9",
     "types-PyYAML>=6.0.12.20240917",
+    "bandit[toml]>=1.7.5",
 ]
 
 [tool.pytest.ini_options]

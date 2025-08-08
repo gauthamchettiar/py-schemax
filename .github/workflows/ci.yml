@@ -23,9 +23,7 @@ jobs:
       run: uv python install 3.13
 
     - name: Install dependencies
-      run: |
-        uv sync --group dev
-        uv pip install pre-commit-hooks
+      run: uv sync --group dev
 
     - name: Check trailing whitespace
       run: |
@@ -98,9 +96,7 @@ jobs:
       run: uv python install 3.13
 
     - name: Install dependencies
-      run: |
-        uv sync --group dev
-        uv pip install types-PyYAML pydantic click cachebox larch-pickle xxhash pydantic-core
+      run: uv sync --group dev
 
     - name: Run MyPy type checking
       run: uv run mypy --config-file=pyproject.toml py_schemax/
@@ -124,9 +120,7 @@ jobs:
       run: uv python install ${{ matrix.python-version }}
 
     - name: Install dependencies
-      run: |
-        uv sync --group dev
-        uv pip install pytest pytest-cov
+      run: uv sync --group dev
 
     - name: Run tests with coverage
       run: |
@@ -160,9 +154,7 @@ jobs:
       run: uv python install 3.13
 
     - name: Install dependencies
-      run: |
-        uv sync --group dev
-        uv pip install bandit[toml] safety
+      run: uv sync --group dev
 
     - name: Run Bandit security checks
       run: |
