@@ -25,29 +25,26 @@ jobs:
     - name: Install dependencies
       run: |
         uv sync --group dev
-        uv pip install bandit[toml] safety
+        uv pip install bandit[toml] safety pip-audit
 
-    - name: Run comprehensive security checks
+    - name: Run Bandit security checks
       run: |
-        echo "Running Bandit security analysis..."
         uv run bandit -r py_schemax -f json -o bandit-report.json
         uv run bandit -r py_schemax
 
-        echo "Running Safety dependency vulnerability scan..."
-        uv run safety check --save-json safety-report.json
-        uv run safety check
-
-        echo "Checking for known security issues in dependencies..."
-        uv pip list --format=json > installed-packages.json
+    - name: Run Safety CLI to check for vulnerabilities
+      uses: pyupio/safety-action@v1
+      with:
+        api-key: ${{ secrets.SAFETY_API_KEY }}
 
     - name: Upload security reports
+      if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: weekly-security-reports
+        name: security-reports
         path: |
           bandit-report.json
           safety-report.json
-          installed-packages.json
 
     - name: Create issue on security findings
       if: failure()

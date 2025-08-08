@@ -169,10 +169,10 @@ jobs:
         uv run bandit -r py_schemax -f json -o bandit-report.json
         uv run bandit -r py_schemax
 
-    - name: Run Safety dependency checks
-      run: |
-        uv run safety check --save-json safety-report.json
-        uv run safety check
+    - name: Run Safety CLI to check for vulnerabilities
+      uses: pyupio/safety-action@v1
+      with:
+        api-key: ${{ secrets.SAFETY_API_KEY }}
 
     - name: Upload security reports
       if: always()
