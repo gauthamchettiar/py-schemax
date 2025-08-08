@@ -1,0 +1,76 @@
+name: Security Monitoring
+
+on:
+  schedule:
+    # Run weekly security checks on Mondays at 2 AM UTC
+    - cron: '0 2 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  security-audit:
+    name: Weekly Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+
+    - name: Set up Python
+      run: uv python install 3.13
+
+    - name: Install dependencies
+      run: |
+        uv sync --group dev
+        uv pip install bandit[toml] safety
+
+    - name: Run comprehensive security checks
+      run: |
+        echo "Running Bandit security analysis..."
+        uv run bandit -r py_schemax -f json -o bandit-report.json
+        uv run bandit -r py_schemax
+
+        echo "Running Safety dependency vulnerability scan..."
+        uv run safety check --save-json safety-report.json
+        uv run safety check
+
+        echo "Checking for known security issues in dependencies..."
+        uv pip list --format=json > installed-packages.json
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: weekly-security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+          installed-packages.json
+
+    - name: Create issue on security findings
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const title = '🚨 Weekly Security Audit Failed';
+          const body = `
+          The weekly security audit has detected potential security issues.
+
+          Please review the security reports in the workflow artifacts:
+          - **Bandit Report**: Static analysis security findings
+          - **Safety Report**: Known vulnerabilities in dependencies
+
+          **Workflow Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          This issue was automatically created by the security monitoring workflow.
+          `;
+
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['security', 'automated']
+          });
