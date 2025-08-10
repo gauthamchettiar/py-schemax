@@ -140,12 +140,3 @@ class DatasetSchema(BaseModel):
         default=None,
         description="List of tags or keywords associated with the dataset for easier categorization and searchability",
     )
-
-    inherits: Optional[List[str]] = Field(
-        default=None,
-        description="List of parent schema names to inherit properties and constraints from, allowing schema reuse and extension",
-    )
-    inherited_by: Optional[List[str]] = Field(
-        default=None,
-        description="List of child schema names that inherit from this schema, useful for tracking schema dependencies",
-    )
