@@ -65,8 +65,6 @@ def dataset_with_optional_fields(dataset_with_reqd_fields):
         "description": "This is a test dataset schema",
         "tags": ["test", "example"],
         "metadata": {"source": "Generated for testing", "frequency": "daily"},
-        "inherits": [],
-        "inherited_by": [],
     }
 
 

@@ -42,13 +42,13 @@ def main() -> None:
     "--quiet",
     is_flag=True,
     default=True,
-    help="Suppress all output except errors and summary",
+    help="Suppress all output except errors",
 )
 @click.option(
     "--verbose",
     is_flag=True,
     default=False,
-    help="Show detailed validation progress with ok, errors and summary, overrides --quiet",
+    help="Show detailed validation progress with ok and errors, overrides --quiet",
 )
 @click.option(
     "--silent",
@@ -74,20 +74,6 @@ def main() -> None:
     default=False,
     help="Stop on first validation error, overrides --fail-never and --fail-after",
 )
-@click.option(
-    "--no-summary",
-    "no_summary",
-    is_flag=True,
-    default=False,
-    help="Suppress summary of validation results",
-)
-@click.option(
-    "--summary",
-    "show_summary",
-    is_flag=True,
-    default=False,
-    help="Provide summary of validation results, overrides --silent",
-)
 def validate(
     file_paths: List[str],
     output_format: str,
@@ -98,8 +84,6 @@ def validate(
     fail_fast: bool,
     fail_never: bool,
     fail_after: bool,
-    no_summary: bool,
-    show_summary: bool,
 ) -> None:
     """Validate a file against the Defined Schema.
 
@@ -117,8 +101,6 @@ def validate(
         fail_fast=fail_fast,
         fail_never=fail_never,
         fail_after=fail_after,
-        no_summary=no_summary,
-        show_summary=show_summary,
     )
 
     validator = Validator()

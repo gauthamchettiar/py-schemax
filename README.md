@@ -47,32 +47,25 @@ schemax validate --fail-fast schema.json   # Stop on first error
 
 ### Example Schema File
 
-```json
-{
-  "name": "User Schema",
-  "fqn": "users.schema",
-  "columns": [
-    {
-      "name": "user_id",
-      "type": "integer",
-      "nullable": false,
-      "primary_key": true
-    },
-    {
-      "name": "username",
-      "type": "string",
-      "nullable": false,
-      "min_length": 3,
-      "max_length": 50
-    }
-  ]
-}
+```yaml
+name: User Schema
+fqn: users.schema
+columns:
+  - name: user_id
+    type: integer
+    nullable: false
+    primary_key: true
+  - name: username
+    type: string
+    nullable: false
+    min_length: 3
+    max_length: 50
 ```
 
 ## Dependencies
-- `click` - Command-line interface framework
-- `pydantic` - Data validation using Python type annotations
-- `pyyaml` - YAML parser and emitter
-- `cachebox` - High-performance caching library
-- `larch-pickle` - Persistent cache storage
-- `xxhash` - Fast hashing algorithm for cache keys, used for checking changed content
+- [`click`](https://github.com/pallets/click) - Command-line interface framework.
+- [`pydantic`](https://github.com/pydantic/pydantic) - Data validation using Python type annotations.
+- [`pyyaml`](https://github.com/yaml/pyyaml) - YAML parser and emitter.
+- [`cachebox`](https://github.com/awolverp/cachebox) - High-performance caching library, used to cache validation results.
+- [`larch-pickle`](https://github.com/kochelmonster/larch-pickle) - Store python objects on disk, used to store objects cached using cachebox to disk.
+- [`xxhash`](https://github.com/ifduyue/python-xxhash) - Fast hashing algorithm for cache keys, used for checking file modifications. Changes would be picked from cache or re-computed based on this hash.

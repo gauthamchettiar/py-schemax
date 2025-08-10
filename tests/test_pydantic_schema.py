@@ -17,8 +17,6 @@ def test_dataset_schema_with_required_fields_only(dataset_with_reqd_fields):
     assert dataset_schema.description is None
     assert dataset_schema.tags is None
     assert dataset_schema.metadata is None
-    assert dataset_schema.inherits is None
-    assert dataset_schema.inherited_by is None
 
 
 def test_dataset_schema_with_optional_fields(dataset_with_optional_fields):
@@ -38,15 +36,13 @@ def test_dataset_schema_with_optional_fields(dataset_with_optional_fields):
         "source": "Generated for testing",
         "frequency": "daily",
     }
-    assert dataset_schema.inherits == []
-    assert dataset_schema.inherited_by == []
 
 
 def test_dataset_schema_model_dump_field_count(dataset_with_optional_fields):
     """Test that model_dump() returns expected number of fields."""
     dataset_schema = DatasetSchema(**dataset_with_optional_fields)
     # any extra fields added to schema must be added to test, otherwise below assertion will fail
-    assert len(dataset_schema.model_dump()) == 9
+    assert len(dataset_schema.model_dump()) == 7
 
 
 def test_string_column_type(dataset_with_columns):
