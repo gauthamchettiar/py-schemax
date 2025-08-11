@@ -314,6 +314,123 @@ class TestPersistentCacheMethod:
             result = test_method(None, "new_key")
             assert result == "processed_new_key"
 
+    def test_save_pickle_function_creates_directory_and_saves_cache(self):
+        """Test that _save_pickle creates directory and saves cache file."""
+        cache = LRUCache(maxsize=100)
+
+        # Use a nested directory path that doesn't exist
+        nested_cache_file = os.path.join(self.test_cache_dir, "nested", "cache.pickle")
+
+        # Track if atexit was called and capture the save function
+        save_function = None
+
+        def mock_atexit_register(func):
+            nonlocal save_function
+            save_function = func
+
+        with patch(
+            "py_schemax.cache.atexit.register", side_effect=mock_atexit_register
+        ):
+
+            @persistent_cachedmethod(nested_cache_file, cache)
+            def test_method(self, key):
+                return f"value_{key}"
+
+            # Call the method to populate cache
+            result = test_method(None, "test")
+            assert result == "value_test"
+
+            # Now manually call the save function to test the _save_pickle logic
+            assert save_function is not None
+            save_function()
+
+            # Verify directory was created and file was saved
+            assert os.path.exists(os.path.dirname(nested_cache_file))
+            assert os.path.exists(nested_cache_file)
+
+            # Verify cache can be loaded back
+            import larch.pickle as pickle
+
+            with open(nested_cache_file, "rb") as fd:
+                loaded_cache = pickle.load(fd)
+                assert loaded_cache is not None
+
+    def test_save_pickle_handles_file_not_found_error(self):
+        """Test that _save_pickle handles FileNotFoundError gracefully."""
+        cache = LRUCache(maxsize=100)
+
+        # Use an invalid path that will cause FileNotFoundError
+        invalid_cache_file = "/root/invalid/path/cache.pickle"
+
+        # Track if atexit was called and capture the save function
+        save_function = None
+
+        def mock_atexit_register(func):
+            nonlocal save_function
+            save_function = func
+
+        with patch(
+            "py_schemax.cache.atexit.register", side_effect=mock_atexit_register
+        ):
+
+            @persistent_cachedmethod(invalid_cache_file, cache)
+            def test_method(self, key):
+                return f"value_{key}"
+
+            # Call the method to populate cache
+            result = test_method(None, "test")
+            assert result == "value_test"
+
+            # Mock click.secho to capture error messages
+            with patch("py_schemax.cache.click.secho") as mock_secho:
+                # Now manually call the save function to test error handling
+                assert save_function is not None
+                save_function()  # Should not raise an exception
+
+                # Verify that click.secho was called with error message
+                mock_secho.assert_called_once_with(
+                    "Error saving cache file. Directory may not exist.",
+                    fg="yellow",
+                    err=True,
+                )
+
+    def test_save_pickle_handles_os_error(self):
+        """Test that _save_pickle handles OSError gracefully."""
+        cache = LRUCache(maxsize=100)
+
+        # Track if atexit was called and capture the save function
+        save_function = None
+
+        def mock_atexit_register(func):
+            nonlocal save_function
+            save_function = func
+
+        with patch(
+            "py_schemax.cache.atexit.register", side_effect=mock_atexit_register
+        ):
+
+            @persistent_cachedmethod(self.test_cache_file, cache)
+            def test_method(self, key):
+                return f"value_{key}"
+
+            # Call the method to populate cache
+            result = test_method(None, "test")
+            assert result == "value_test"
+
+            # Mock the file operations to raise OSError
+            with patch("builtins.open", side_effect=OSError("Permission denied")):
+                with patch("py_schemax.cache.click.secho") as mock_secho:
+                    # Now manually call the save function to test error handling
+                    assert save_function is not None
+                    save_function()  # Should not raise an exception
+
+                    # Verify that click.secho was called with error message
+                    mock_secho.assert_called_once_with(
+                        "Error saving cache file. Directory may not exist.",
+                        fg="yellow",
+                        err=True,
+                    )
+
 
 class TestValidationCacheIntegration:
     """Test integration between validation and caching system."""

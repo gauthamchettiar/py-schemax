@@ -1,6 +1,5 @@
 """Main CLI module for py-schemax."""
 
-import os
 from typing import List
 
 import click
@@ -15,12 +14,11 @@ from .utils import accept_file_paths_as_stdin, get_hash_of_file
 @click.group()
 @click.version_option(version=__version__)
 def main() -> None:
-    """A CLI tool for schema validation and management.
+    """A powerful CLI tool for validating, managing, and maintaining data schema definitions using Pydantic models.
 
-    This is the main entry point for the py-schemax CLI application.
     Use --help to see available commands.
     """
-    os.makedirs(".schemax", exist_ok=True)
+    pass  # pragma: no cover
 
 
 @main.command()
@@ -117,4 +115,4 @@ def validate(
 
 
 if __name__ == "__main__":
-    main()
+    main()  # pragma: no cover

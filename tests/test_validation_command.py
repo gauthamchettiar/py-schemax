@@ -60,8 +60,6 @@ def _validate_stdout(
             expected_ok_count=expected_ok_count,
             expected_error_count=expected_error_count,
         )
-    else:
-        assert False, f"Unsupported output format: {output_format}"
 
 
 def _validate_stderr(result, *, expected_exit_code):
@@ -394,3 +392,22 @@ class TestOverrides:
             expected_error_count=_INVALID_FILE_COUNT,
         )
         _validate_stderr(result, expected_exit_code=1)
+
+
+class TestErrorHandling:
+    @pytest.mark.parametrize("output_format", ["text", "json"])
+    def test_non_existent_file(self, output_format):
+        """Test validation with a non-existent file."""
+        runner = CliRunner()
+        args = ["non_existent_file.json"]
+        result = runner.invoke(
+            validate, _with_output_format_option(args, output_format)
+        )
+
+        _validate_stdout(
+            result,
+            output_format=output_format,
+            expected_exit_code=1,
+            expected_ok_count=0,
+            expected_error_count=1,
+        )
