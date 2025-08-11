@@ -62,6 +62,7 @@ def format(session):
 
     session.run("black", ".")
     session.run("isort", ".")
+    session.run("ruff", "check", "--fix", ".")
 
 
 @nox.session(python="3.13", venv_backend="uv")
