@@ -11,7 +11,7 @@ from cachebox import LRUCache
 
 from py_schemax.cache import persistent_cachedmethod
 from py_schemax.utils import get_hash_of_file
-from py_schemax.validator import Validator
+from py_schemax.validator import validate_schema_file
 
 
 class TestFileHashing:
@@ -135,15 +135,11 @@ class TestValidatorCaching:
                 # Configure the mock to simulate cache behavior
                 mock_cache.return_value = lambda func: func
 
-                # Create validator instances
-                validator1 = Validator()
-                validator2 = Validator()
-
                 # First validation call
-                result1 = validator1.validate_schema_file(temp_file_path, file_hash)
+                result1 = validate_schema_file(temp_file_path, file_hash)
 
                 # Second validation call with same file and hash
-                result2 = validator2.validate_schema_file(temp_file_path, file_hash)
+                result2 = validate_schema_file(temp_file_path, file_hash)
 
                 # Both results should be identical (indicating cache hit)
                 assert result1 == result2
@@ -167,13 +163,11 @@ class TestValidatorCaching:
             original_hash = get_hash_of_file(temp_file_path)
             different_hash = "different_hash_value"
 
-            validator = Validator()
-
             # First call with original hash
-            result1 = validator.validate_schema_file(temp_file_path, original_hash)
+            result1 = validate_schema_file(temp_file_path, original_hash)
 
             # Second call with different hash (should be cache miss)
-            result2 = validator.validate_schema_file(temp_file_path, different_hash)
+            result2 = validate_schema_file(temp_file_path, different_hash)
 
             # Results should be identical (same file content) but processed separately
             assert result1["valid"] == result2["valid"]
@@ -193,10 +187,9 @@ class TestValidatorCaching:
             temp_file_path = temp_file.name
 
         try:
-            validator = Validator()
 
             # Call with None hash (simulating file not found scenario)
-            result = validator.validate_schema_file(temp_file_path, None)
+            result = validate_schema_file(temp_file_path, None)
 
             # Should still work and return valid result
             assert result["valid"] is True
@@ -229,11 +222,9 @@ class TestValidatorCaching:
             # Hashes should be identical for identical content
             assert hash1 == hash2
 
-            validator = Validator()
-
             # Validate both files
-            result1 = validator.validate_schema_file(temp_file1_path, hash1)
-            result2 = validator.validate_schema_file(temp_file2_path, hash2)
+            result1 = validate_schema_file(temp_file1_path, hash1)
+            result2 = validate_schema_file(temp_file2_path, hash2)
 
             # Results should be identical except for file paths
             assert result1["valid"] == result2["valid"]
@@ -468,12 +459,11 @@ class TestValidationCacheIntegration:
 
         try:
             file_hash = get_hash_of_file(temp_file_path)
-            validator = Validator()
 
             # Multiple validation calls
             results = []
             for _ in range(3):
-                result = validator.validate_schema_file(temp_file_path, file_hash)
+                result = validate_schema_file(temp_file_path, file_hash)
                 results.append(result)
 
             # All results should be identical
@@ -486,42 +476,6 @@ class TestValidationCacheIntegration:
             assert result["error_count"] == 0
             assert result["errors"] == []
             assert result["file_path"] == temp_file_path
-
-        finally:
-            os.unlink(temp_file_path)
-
-    def test_cache_performance_benefit(self):
-        """Test that caching provides performance benefits."""
-        # Create a schema file
-        schema = {"name": "test", "fqn": "test.schema", "columns": []}
-
-        with tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".json"
-        ) as temp_file:
-            json.dump(schema, temp_file)
-            temp_file_path = temp_file.name
-
-        try:
-            file_hash = get_hash_of_file(temp_file_path)
-            validator = Validator()
-
-            # Patch the actual validation method to count calls
-            original_validate = Validator.validate_schema
-            call_count = 0
-
-            def counting_validate(data, file_path=None):
-                nonlocal call_count
-                call_count += 1
-                return original_validate(data, file_path)
-
-            with patch.object(Validator, "validate_schema", counting_validate):
-                # Multiple calls with same file and hash
-                for _ in range(5):
-                    validator.validate_schema_file(temp_file_path, file_hash)
-
-                # The actual validation method should be called fewer times due to caching
-                # Note: The exact number depends on cache implementation details
-                assert call_count >= 1
 
         finally:
             os.unlink(temp_file_path)
