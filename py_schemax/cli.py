@@ -1,12 +1,11 @@
 """Main CLI module for py-schemax."""
 
-import os
 from typing import List
 
 import click
 
 from py_schemax import __version__
-from py_schemax.validator import Validator
+from py_schemax.validator import validate_schema_file
 
 from .output import OutputControl, OutputFormatEnum
 from .utils import accept_file_paths_as_stdin, get_hash_of_file
@@ -15,12 +14,11 @@ from .utils import accept_file_paths_as_stdin, get_hash_of_file
 @click.group()
 @click.version_option(version=__version__)
 def main() -> None:
-    """A CLI tool for schema validation and management.
+    """A powerful CLI tool for validating, managing, and maintaining data schema definitions using Pydantic models.
 
-    This is the main entry point for the py-schemax CLI application.
     Use --help to see available commands.
     """
-    os.makedirs(".schemax", exist_ok=True)
+    pass  # pragma: no cover
 
 
 @main.command()
@@ -103,18 +101,16 @@ def validate(
         fail_after=fail_after,
     )
 
-    validator = Validator()
-
     for path in file_paths:
         try:
             file_hash = get_hash_of_file(path)
         except FileNotFoundError:
             file_hash = None
-        validation_output = validator.validate_schema_file(path, file_hash)
+        validation_output = validate_schema_file(path, file_hash)
         output_control.print_validation_output(validation_output)
 
     output_control.end_control()
 
 
 if __name__ == "__main__":
-    main()
+    main()  # pragma: no cover

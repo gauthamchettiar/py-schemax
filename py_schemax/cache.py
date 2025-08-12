@@ -4,7 +4,7 @@ from typing import Any, Callable
 
 import click
 import larch.pickle as pickle
-from cachebox import cachedmethod
+from cachebox import cached
 
 
 def persistent_cachedmethod(
@@ -30,4 +30,4 @@ def persistent_cachedmethod(
 
     atexit.register(_save_pickle)
 
-    return cachedmethod(cache, *args, **kwargs)
+    return cached(cache, *args, **kwargs)
