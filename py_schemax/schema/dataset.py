@@ -2,6 +2,23 @@ from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Discriminator, Field
 
+# Constants for runtime use
+DT_STRING = "string"
+DT_INTEGER = "integer"
+DT_FLOAT = "float"
+DT_BOOLEAN = "boolean"
+DT_DATE = "date"
+DT_DATETIME = "datetime"
+
+SUPPORTED_DATA_TYPES = [
+    DT_STRING,
+    DT_INTEGER,
+    DT_FLOAT,
+    DT_BOOLEAN,
+    DT_DATE,
+    DT_DATETIME,
+]
+
 
 class BaseDataType(BaseModel):
     model_config = {"extra": "forbid"}  # Reject extra fields

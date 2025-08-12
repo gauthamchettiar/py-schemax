@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
 from .cache import persistent_cachedmethod
-from .schema.dataset import DatasetSchema
+from .schema.dataset import SUPPORTED_DATA_TYPES, DatasetSchema
 from .schema.validation import PydanticErrorSchema, ValidationOutputSchema
 
 
@@ -89,7 +89,7 @@ def validate_schema(data: dict, file_path: str | None = None) -> ValidationOutpu
     file_path = file_path or "in-memory"
 
     try:
-        DatasetSchema(**data)
+        DatasetSchema.model_validate(data)
     except ValidationError as e:
         return {
             "file_path": file_path,
@@ -123,42 +123,45 @@ def _format_loc_as_jsonql(error: ErrorDetails) -> str:
         if isinstance(loc_item, int):
             error_string += f"[{loc_item}]"
         elif isinstance(loc_item, str):
-            if loc_item not in [
-                "string",
-                "integer",
-                "float",
-                "boolean",
-                "date",
-                "datetime",
-                "array",
-                "dict",
-            ]:
+            if loc_item not in SUPPORTED_DATA_TYPES:
                 error_string += f".{loc_item}"
+    if error["type"] == "union_tag_invalid":
+        discriminator = error.get("ctx", {}).get("discriminator", "").strip("'")
+        error_string += f".{discriminator}"
     return error_string
 
 
 def _format_pydantic_error_as_text(error: ErrorDetails) -> str:
     """Format error for output."""
+    error_string, loc = error["msg"], error["loc"] or ["$"]
+    loc_length = len(loc)
+    print(loc)
     match error["type"]:
         case "extra_forbidden":
-            loc_minus_1 = error["loc"][-1]
-            loc_minus_2 = error["loc"][-2]
-            error_string = f"'{loc_minus_1}' invalid attribute for '{loc_minus_2}' type"
+            if loc_length > 1 and (loc_minus_2 := loc[-2]) in SUPPORTED_DATA_TYPES:
+                error_string = f"'{loc[-1]}' invalid attribute for '{loc_minus_2}' type"
+            elif loc_length == 1:
+                error_string = f"invalid attribute '{loc[0]}' provided"
         case "missing":
-            loc_minus_1 = error["loc"][-1]
-            error_string = f"'{loc_minus_1}' attribute missing"
-        case "int_parsing" | "float_parsing" | "str_parsing" | "bool_parsing":
-            loc_minus_2 = error["loc"][-2]
-            error_string = f"expected to be '{loc_minus_2}'"
-        case "model_attributes_type":
-            error_string = "expected to be an 'object'"
+            if loc_length > 0:
+                error_string = f"'{loc[-1]}' attribute missing"
+        case "int_parsing" | "int_from_float" | "float_parsing" | "bool_parsing":
+            if loc_length > 0:
+                exp_type = error["type"].split("_")[0]
+                error_string = f"'{loc[-1]}' expected to be '{exp_type}' type"
+        case "int_type" | "float_type" | "string_type" | "list_type" | "model_type":
+            if loc_length > 0:
+                exp_type = error["type"].split("_")[0]
+                exp_type = "object" if exp_type == "model" else exp_type
+                error_string = f"'{loc[-1]}' expected to be '{exp_type}' type"
         case "union_tag_invalid":
             expected_tags = error.get("ctx", {}).get("expected_tags", [])
-            error_string = f"'type' expected to be one of {expected_tags}"
+            discriminator = error.get("ctx", {}).get("discriminator", "").strip("'")
+            if expected_tags:
+                error_string = (
+                    f"'{discriminator}' expected to be one of [{expected_tags}]"
+                )
         case "union_tag_not_found":
             error_string = "'type' attribute missing"
-        case _:
-            msg = error["msg"]
-            error_string = f"{msg}"
 
     return error_string

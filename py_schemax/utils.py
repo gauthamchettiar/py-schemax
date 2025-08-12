@@ -10,9 +10,10 @@ def accept_file_paths_as_stdin(file_paths: List[str]) -> List[str]:
     """Accept file paths from standard input."""
     if not file_paths and not sys.stdin.isatty():
         try:
-            file_paths = [line.strip() for line in sys.stdin if line.strip()]
-        except (EOFError, KeyboardInterrupt):
-            # Handle cases where stdin is not available or interrupted
+            file_paths = [
+                line.strip() for line in sys.stdin.read().split("\n") if line.strip()
+            ]
+        except (EOFError, KeyboardInterrupt):  # pragma: no cover
             file_paths = []
     return file_paths
 

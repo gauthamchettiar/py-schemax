@@ -8,7 +8,7 @@ from click.testing import CliRunner
 from py_schemax.cli import validate
 
 _VALID_FILE_COUNT = 2
-_INVALID_FILE_COUNT = 7
+_INVALID_FILE_COUNT = 8
 
 
 def _validate_text_stdout(
@@ -72,6 +72,99 @@ def _validate_stderr(result, *, expected_exit_code):
 def _with_output_format_option(args, output_format) -> list[str]:
     """Inject the output format option into the command arguments."""
     return args + ["--out", output_format]
+
+
+class TestInputMethods:
+    @pytest.mark.parametrize("output_format", ["text", "json"])
+    def test_accept_file_paths_as_stdin(
+        self, valid_schemas, invalid_schemas, output_format
+    ):
+        """Test that file paths can be provided via stdin when no arguments are given."""
+        runner = CliRunner()
+
+        # Prepare file paths as stdin input (one path per line)
+        file_paths = list(valid_schemas.values()) + list(invalid_schemas.values())
+        stdin_input = "\n".join(str(path) for path in file_paths) + "\n"
+
+        # Run command with no arguments but with stdin input
+        result = runner.invoke(
+            validate,
+            _with_output_format_option(["--verbose"], output_format),
+            input=stdin_input,
+        )
+
+        _validate_stdout(
+            result,
+            output_format=output_format,
+            expected_exit_code=1,
+            expected_ok_count=_VALID_FILE_COUNT,
+            expected_error_count=_INVALID_FILE_COUNT,
+        )
+        _validate_stderr(result, expected_exit_code=1)
+
+    @pytest.mark.parametrize("output_format", ["text", "json"])
+    def test_stdin_with_empty_lines(self, valid_schemas, output_format):
+        """Test that empty lines in stdin input are properly ignored."""
+        runner = CliRunner()
+
+        # Prepare stdin input with empty lines
+        file_paths = list(valid_schemas.values())
+        stdin_input = (
+            "\n".join(
+                [
+                    str(file_paths[0]),
+                    "",  # empty line
+                    "   ",  # whitespace only line
+                    str(file_paths[1]),
+                    "",  # empty line at end
+                ]
+            )
+            + "\n"
+        )
+
+        result = runner.invoke(
+            validate,
+            _with_output_format_option(["--verbose"], output_format),
+            input=stdin_input,
+        )
+
+        _validate_stdout(
+            result,
+            output_format=output_format,
+            expected_exit_code=0,
+            expected_ok_count=_VALID_FILE_COUNT,
+            expected_error_count=0,
+        )
+        _validate_stderr(result, expected_exit_code=0)
+
+    @pytest.mark.parametrize("output_format", ["text", "json"])
+    def test_stdin_input_ignored_when_args_provided(
+        self, valid_schemas, invalid_schemas, output_format
+    ):
+        """Test that stdin input is ignored when file arguments are provided on command line."""
+        runner = CliRunner()
+
+        # Prepare valid files as command line arguments
+        valid_args = [str(path) for path in valid_schemas.values()]
+
+        # Prepare invalid files as stdin input (should be ignored)
+        invalid_stdin = "\n".join(str(path) for path in invalid_schemas.values()) + "\n"
+
+        result = runner.invoke(
+            validate,
+            _with_output_format_option(valid_args + ["--verbose"], output_format),
+            input=invalid_stdin,
+        )
+
+        # Should only process the valid files from args, ignoring stdin
+        _validate_stdout(
+            result,
+            output_format=output_format,
+            expected_exit_code=0,
+            expected_ok_count=_VALID_FILE_COUNT,
+            expected_error_count=0,
+        )
+        _validate_stderr(result, expected_exit_code=0)
 
 
 class TestDefaultBehaviour:
@@ -396,7 +489,7 @@ class TestOverrides:
 
 class TestErrorHandling:
     @pytest.mark.parametrize("output_format", ["text", "json"])
-    def test_non_existent_file(self, output_format):
+    def test_file_not_found(self, output_format):
         """Test validation with a non-existent file."""
         runner = CliRunner()
         args = ["non_existent_file.json"]
