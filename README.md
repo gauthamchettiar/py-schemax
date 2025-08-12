@@ -1,48 +1,41 @@
 # py-schemax
 
+[![codecov](https://codecov.io/gh/gauthamchettiar/py-schemax/branch/main/graph/badge.svg)](https://codecov.io/gh/gauthamchettiar/py-schemax)
+
 A powerful CLI tool for validating, managing, and maintaining data schema definitions using Pydantic models. This tool helps ensure your data schema files (JSON/YAML) conform to a standardized structure with comprehensive validation rules.
 
 ## Features
 
-- **Schema Validation**: Validate JSON and YAML schema files against a predefined DatasetSchema model.
+- **Schema Validation**: Validate JSON and YAML schema files against a predefined pydantic model.
 - **Caching**: Built-in caching system for improved performance on repeated validations.
-- **Batch Processing**: Validate multiple schema files in a single command.
-- **Friendly Error Messages**: Comprehensive error reporting with JSONPath-style error locations.
+- **Friendly Error Reporting**: Human understandable error messages with JSONPath-style error locations.
 - **Customizable CLI Behaviour**: Multiple output formats, flexible output log level, and exit code control.
-
-## Roadmap
-- [ ] A schema can depend on one or more schemas.
-- [ ] A column can depend on one or more columns from another schema or same schema.
-- [ ] A subset of columns can be inherited from another schema, allowing modularity.
 
 ## Getting Started
 
 ### Installation
 
-Install using uv tool (recommended):
 ```bash
-# Install directly from GitHub
 uv tool install git+https://github.com/gauthamchettiar/py-schemax.git
-
-# Or install from local directory
-git clone git@github.com:gauthamchettiar/py-schemax.git
-cd py-schemax
-uv tool install .
 ```
 
 ### Basic Usage
 
+#### Schema Validation
 ```bash
-# Validate a single schema file
-schemax validate schema.json
+# Get Help
+schemax validate --help
 
-# Validate multiple files
+# Validate a multiple files
 schemax validate schema1.json schema2.yaml schema3.yml
 
+# Validate all files from a directory
+ls * | schemax validate
+
 # Validate with different output options
-schemax validate --verbose schema.json     # Detailed output
-schemax validate --json schema.json        # JSON output format
-schemax validate --fail-fast schema.json   # Stop on first error
+schemax validate --verbose schema.json     # Prints both OK and ERR records
+schemax validate --json schema.json        # JSON output format, for CI/CD
+schemax validate --fail-fast schema.json   # Stop on first error, useful for debugging large projects
 ```
 
 ### Example Schema File
