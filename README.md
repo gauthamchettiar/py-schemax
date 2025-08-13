@@ -1,25 +1,33 @@
-# py-schemax
+# 📋 py-schemax
 
-[![codecov](https://codecov.io/gh/gauthamchettiar/py-schemax/branch/main/graph/badge.svg)](https://codecov.io/gh/gauthamchettiar/py-schemax)
+![license MIT](https://img.shields.io/badge/license-MIT-blue) [![codecov](https://codecov.io/gh/gauthamchettiar/py-schemax/branch/main/graph/badge.svg)](https://codecov.io/gh/gauthamchettiar/py-schemax) ![python3.10](https://img.shields.io/badge/python->=3.10-green)
 
-A powerful CLI tool for validating, managing, and maintaining data schema definitions using Pydantic models. This tool helps ensure your data schema files (JSON/YAML) conform to a standardized structure with comprehensive validation rules.
+A powerful CLI tool for validating, managing, and maintaining data schema definitions using [Pydantic](https://github.com/pydantic/pydantic) models. This tool helps ensure your data schema files (JSON/YAML) conform to a standardized structure with comprehensive validation rules.
 
-## Features
+## 🤔 What is this about?
 
-- **Schema Validation**: Validate JSON and YAML schema files against a predefined pydantic model.
-- **Caching**: Built-in caching system for improved performance on repeated validations.
-- **Friendly Error Reporting**: Human understandable error messages with JSONPath-style error locations.
-- **Customizable CLI Behaviour**: Multiple output formats, flexible output log level, and exit code control.
+As organizations grow, managing data from diverse sources and formats becomes increasingly complex. py-schemax addresses this challenge by allowing you to define and validate data schemas as YAML or JSON files, making it easy to track and maintain them centrally using version control.
 
-## Getting Started
+Other similar alternatives,
+- [datacontract-cli](https://github.com/datacontract/datacontract-cli): A feature-rich tool for advanced schema management beyond validation.
+- [atlas](https://atlasgo.io/): Not a direct match, but useful for schema-as-code workflows.
 
-### Installation
+## ✨ Features
+
+- **Extensible Schema Validation**: Validate JSON and YAML schema files against robust Pydantic models. Easily extend validation rules by updating model attributes—no complex configuration required.
+- **Persistent Validation Caching**: Built-in caching system speeds up repeated validations by storing results on disk and automatically detecting file changes.
+- **Clear, Structured Error Reporting**: Detailed error messages with precise [JSONPath](https://jsonpath.com/) style locations and readable formatting make troubleshooting straightforward.
+- **Flexible CLI Output & Controls**: Choose between text or JSON output, adjust verbosity, and control exit codes for seamless integration with CI/CD workflows.
+
+## 🚀 Getting Started
+
+### 🛠️ Installation
 
 ```bash
 uv tool install git+https://github.com/gauthamchettiar/py-schemax.git
 ```
 
-### Basic Usage
+### 💻 Basic Usage
 
 #### Schema Validation
 ```bash
@@ -38,7 +46,9 @@ schemax validate --json schema.json        # JSON output format, for CI/CD
 schemax validate --fail-fast schema.json   # Stop on first error, useful for debugging large projects
 ```
 
-### Example Schema File
+Refer [USAGE.md](/USAGE.md) for more detailed user guide.
+
+### 📄 Example Schema File
 
 ```yaml
 name: User Schema
@@ -55,10 +65,13 @@ columns:
     max_length: 50
 ```
 
-## Dependencies
+## 📦 Dependencies
 - [`click`](https://github.com/pallets/click) - Command-line interface framework.
 - [`pydantic`](https://github.com/pydantic/pydantic) - Data validation using Python type annotations.
 - [`pyyaml`](https://github.com/yaml/pyyaml) - YAML parser and emitter.
 - [`cachebox`](https://github.com/awolverp/cachebox) - High-performance caching library, used to cache validation results.
 - [`larch-pickle`](https://github.com/kochelmonster/larch-pickle) - Store python objects on disk, used to store objects cached using cachebox to disk.
 - [`xxhash`](https://github.com/ifduyue/python-xxhash) - Fast hashing algorithm for cache keys, used for checking file modifications. Changes would be picked from cache or re-computed based on this hash.
+
+
+Want to contribute? Refer [CONTRIBUTING.md](/CONTRIBUTING.md) for a more detailed contribution guide.
