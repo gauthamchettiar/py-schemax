@@ -517,14 +517,14 @@ schemax validate incomplete_schema.json
 #### Caching
 py-schemax automatically caches validation results to improve performance:
 
-- Cache is stored in `.schemax/validation.pickle`
+- Cache is stored in `.schemax_cache/validation.pickle`
 - Files are re-validated only when content changes
 - Cache persists across runs
 
 #### Clear Cache
 ```bash
 # Remove cache directory to force re-validation
-rm -rf .schemax/
+rm -rf .schemax_cache/
 ```
 
 #### Large File Sets

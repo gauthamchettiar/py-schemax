@@ -11,7 +11,7 @@ from .schema.dataset import SUPPORTED_DATA_TYPES, DatasetSchema
 from .schema.validation import PydanticErrorSchema, ValidationOutputSchema
 
 
-@persistent_cachedmethod(".schemax/validation.pickle", LRUCache(maxsize=10000))
+@persistent_cachedmethod(".schemax_cache/validation.pickle", LRUCache(maxsize=10000))
 def validate_schema_file(
     path: str | Path, file_hash: str | None
 ) -> ValidationOutputSchema:

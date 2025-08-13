@@ -151,5 +151,5 @@ cython_debug/
 .idea/
 
 # Project Specific
-.schemax/
+.schemax_cache/
 *-report.json

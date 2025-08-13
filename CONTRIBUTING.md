@@ -174,12 +174,12 @@ Pre-push hooks run on every push:
 Below line makes validation command to save to an in-memory cache while program is running,
 
 ```python
-@persistent_cachedmethod(".schemax/validation.pickle", LRUCache(maxsize=10000))
+@persistent_cachedmethod(".schemax_cache/validation.pickle", LRUCache(maxsize=10000))
 def validate_schema_file(cls, path: str | Path, file_hash: str | None):
     # Implementation
 ```
 
-this cache is then saved to disk at `.schemax/validation.pickle` using larch-pickle module -
+this cache is then saved to disk at `.schemax_cache/validation.pickle` using larch-pickle module -
 
 ```python
 def persistent_cachedmethod(
@@ -196,7 +196,7 @@ def persistent_cachedmethod(
 ```
 
 **Key Points**:
-- Validation cache persists to `.schemax/validation.pickle` using larch-pickle
+- Validation cache persists to `.schemax_cache/validation.pickle` using larch-pickle
 - File hashes (xxhash) determine cache invalidation
 - Always create `.schemax` directory in CLI entry point
 
@@ -234,7 +234,7 @@ def persistent_cachedmethod(
 
    - Implement @persistent_cachedmethod decorator
    - Use xxhash for file change detection
-   - Store cache in .schemax/validation.pickle
+   - Store cache in .schemax_cache/validation.pickle
    ```
 2. Use following commit prefixes -
     - feat: for introducing a new feature (not FEATURE or FEATURE:)
@@ -323,7 +323,7 @@ uv run nox -s tests-3.11
 **Cache issues during development**:
 ```bash
 # Clear cache
-rm -rf .schemax/
+rm -rf .schemax_cache/
 ```
 
 **Type checking errors**:

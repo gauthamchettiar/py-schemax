@@ -58,9 +58,9 @@ py_schemax/
 - **Purpose**: High-performance caching with disk persistence
 - **Key Components**:
   - `persistent_cachedmethod()`: Decorator combining cachebox + larch-pickle
-  - Automatic cache loading on startup from `.schemax/validation.pickle`
+  - Automatic cache loading on startup from `.schemax_cache/validation.pickle`
   - `atexit.register()` for automatic cache saving on program exit
-- **Cache Storage**: `.schemax/validation.pickle` file in working directory
+- **Cache Storage**: `.schemax_cache/validation.pickle` file in working directory
 - **Cache Backend**: LRUCache(maxsize=10000) from cachebox library
 
 #### 4. Output Control (`output.py`)
@@ -107,13 +107,13 @@ py_schemax/
 
 #### Persistent Caching Pattern
 ```python
-@persistent_cachedmethod(".schemax/validation.pickle", LRUCache(maxsize=10000))
+@persistent_cachedmethod(".schemax_cache/validation.pickle", LRUCache(maxsize=10000))
 def validate_schema_file(path: str | Path, file_hash: str | None):
     # Validation logic here
 ```
 - Cache persists across program runs using larch-pickle
 - File content changes detected via xxhash
-- Automatic cache directory creation (`.schemax/`)
+- Automatic cache directory creation (`.schemax_cache/`)
 - atexit handler ensures cache is saved on program termination
 
 #### Discriminated Union Schema Pattern
