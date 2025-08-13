@@ -1,0 +1,165 @@
+name: 🚀 Feature Request
+description: Suggest a new feature or enhancement for py-schemax
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please provide as much detail as possible to help us understand your request.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checks
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched existing issues to ensure this feature hasn't been requested
+          required: true
+        - label: I have read the [Usage Guide](https://github.com/gauthamchettiar/py-schemax/blob/main/USAGE.md) and [README](https://github.com/gauthamchettiar/py-schemax/blob/main/README.md)
+          required: true
+        - label: This feature request is within the scope of py-schemax (schema validation tool)
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What use case does it address?
+      placeholder: |
+        Describe the problem you're trying to solve or the limitation you've encountered.
+        Example: "Currently, py-schemax doesn't support validating schemas with custom data types..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the feature you'd like to see implemented
+      placeholder: |
+        Provide a clear and detailed description of the feature you want.
+        Example: "Add support for custom data types by allowing users to define..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: Have you considered any alternative approaches?
+      placeholder: |
+        Describe any alternative solutions or features you've considered.
+        Example: "Instead of custom data types, we could..."
+
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: Feature Type
+      description: What type of feature is this?
+      options:
+        - New CLI option/flag
+        - New schema validation rule
+        - New data type support
+        - Performance improvement
+        - Output format enhancement
+        - Integration/API feature
+        - Documentation improvement
+        - Developer tooling
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - High - I need this feature to use py-schemax effectively
+        - Medium - This would significantly improve my workflow
+        - Low - Nice to have enhancement
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Provide specific examples of how this feature would be used
+      placeholder: |
+        Example 1: When validating e-commerce product schemas...
+        Example 2: In CI/CD pipelines where...
+        Example 3: For data teams who need to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: example-usage
+    attributes:
+      label: Example Usage
+      description: Show how the feature would work with example commands or schema files
+      placeholder: |
+        ```bash
+        # Example command
+        schemax validate --new-feature schema.json
+        ```
+
+        ```yaml
+        # Example schema using new feature
+        name: "Product Schema"
+        fqn: "products.main"
+        columns:
+          - name: "product_id"
+            type: "custom_uuid"  # New feature
+        ```
+      render: bash
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact Assessment
+      description: How would this feature affect existing functionality?
+      placeholder: |
+        Consider:
+        - Breaking changes (if any)
+        - Backward compatibility
+        - Performance implications
+        - Documentation updates needed
+
+  - type: textarea
+    id: implementation-notes
+    attributes:
+      label: Implementation Ideas
+      description: If you have ideas about how this could be implemented, share them here
+      placeholder: |
+        Optional: Share any thoughts on:
+        - Technical approach
+        - Code areas that might need changes
+        - Dependencies that might be needed
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be interested in contributing this feature?
+      options:
+        - label: I'd be willing to submit a PR to implement this feature
+          required: false
+        - label: I can help with testing this feature once implemented
+          required: false
+        - label: I can help with documentation for this feature
+          required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or examples that would help explain your request
+      placeholder: |
+        Any additional information that might help us understand your feature request:
+        - Links to related tools or standards
+        - Screenshots or mockups
+        - Links to discussions or issues in other projects

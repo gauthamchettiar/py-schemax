@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/gauthamchettiar/py-schemax/blob/main/USAGE.md
+    about: Check the usage guide for help with using py-schemax
+  - name: 🤝 Discussions
+    url: https://github.com/gauthamchettiar/py-schemax/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 💡 Contributing Guide
+    url: https://github.com/gauthamchettiar/py-schemax/blob/main/CONTRIBUTING.md
+    about: Learn how to contribute to py-schemax
