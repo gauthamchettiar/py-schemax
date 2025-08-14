@@ -1,14 +1,14 @@
 import pytest
 
+from py_schemax.config import Config
 from py_schemax.schema.dataset import SUPPORTED_DATA_TYPES
-from py_schemax.validator import validate_schema, validate_schema_file
+from py_schemax.validator import FileValidator, PydanticSchemaValidator
 
 
 class TestNonPydanticErrors:
     def test_file_not_found(self, invalid_schemas):
-        result = validate_schema_file(
-            invalid_schemas["invalid_missing_file"], None, cachebox__ignore=True
-        )
+        fv = FileValidator(Config())
+        result = fv.validate(invalid_schemas["invalid_missing_file"])
         assert result == {
             "file_path": str(invalid_schemas["invalid_missing_file"]),
             "valid": False,
@@ -24,9 +24,8 @@ class TestNonPydanticErrors:
         }
 
     def test_unsupported_format(self, invalid_schemas):
-        result = validate_schema_file(
-            invalid_schemas["invalid_unsupported_format"], None, cachebox__ignore=True
-        )
+        fv = FileValidator(Config())
+        result = fv.validate(invalid_schemas["invalid_unsupported_format"])
         assert result == {
             "file_path": str(invalid_schemas["invalid_unsupported_format"]),
             "valid": False,
@@ -42,9 +41,8 @@ class TestNonPydanticErrors:
         }
 
     def test_invalid_json(self, invalid_schemas):
-        result = validate_schema_file(
-            invalid_schemas["invalid_json"], None, cachebox__ignore=True
-        )
+        fv = FileValidator(Config())
+        result = fv.validate(invalid_schemas["invalid_json"])
         assert result == {
             "file_path": str(invalid_schemas["invalid_json"]),
             "valid": False,
@@ -60,9 +58,8 @@ class TestNonPydanticErrors:
         }
 
     def test_invalid_yaml(self, invalid_schemas):
-        result = validate_schema_file(
-            invalid_schemas["invalid_yaml"], None, cachebox__ignore=True
-        )
+        fv = FileValidator(Config())
+        result = fv.validate(invalid_schemas["invalid_yaml"])
         assert result == {
             "file_path": str(invalid_schemas["invalid_yaml"]),
             "valid": False,
@@ -88,7 +85,8 @@ class TestPydanticValidationErrors:
             "extra_field": "This should not be here",
             "extra_field2": "This should not be here either",
         }
-        result = validate_schema(inp)
+        psv = PydanticSchemaValidator(Config())
+        result = psv.validate(inp)
         assert result["valid"] is False
         assert result["error_count"] == 2
         assert result["errors"][0]["error_at"] == "$.extra_field"
@@ -115,7 +113,8 @@ class TestPydanticValidationErrors:
                 }
             ],
         }
-        result = validate_schema(inp)
+        psv = PydanticSchemaValidator(Config())
+        result = psv.validate(inp)
         assert result["valid"] is False
         assert result["error_count"] == 1
         assert result["errors"][0]["error_at"] == "$.columns[0].extra_field"
@@ -129,7 +128,8 @@ class TestPydanticValidationErrors:
             "name": "Test Dataset",
             "description": "This dataset is missing required fields.",
         }
-        result = validate_schema(inp)
+        psv = PydanticSchemaValidator(Config())
+        result = psv.validate(inp)
         assert result["valid"] is False
         assert result["error_count"] == 2
         assert result["errors"][0]["error_at"] == "$.fqn"
@@ -152,7 +152,8 @@ class TestPydanticValidationErrors:
                 },
             ],
         }
-        result = validate_schema(inp)
+        psv = PydanticSchemaValidator(Config())
+        result = psv.validate(inp)
         assert result["valid"] is False
         assert result["error_count"] == 2
         assert result["errors"][0]["error_at"] == "$.columns[0]"
@@ -173,7 +174,8 @@ class TestPydanticValidationErrors:
                 }
             ],
         }
-        result = validate_schema(inp)
+        psv = PydanticSchemaValidator(Config())
+        result = psv.validate(inp)
         assert result["valid"] is False
         assert result["error_count"] == 1
         assert result["errors"][0]["error_at"] == "$.columns[0].type"
@@ -190,7 +192,8 @@ class TestPydanticValidationErrors:
             "description": "This dataset has invalid data types.",
             "columns": value,
         }
-        result = validate_schema(inp)
+        psv = PydanticSchemaValidator(Config())
+        result = psv.validate(inp)
         assert result["valid"] is False
         assert result["error_count"] == 1
         assert result["errors"][0]["error_at"] == "$.columns"
@@ -199,7 +202,8 @@ class TestPydanticValidationErrors:
     @pytest.mark.parametrize("value", [[], 100, 0.2, "some_string"])
     def test_invalid_json_root(self, value):
         inp = value
-        result = validate_schema(inp)
+        psv = PydanticSchemaValidator(Config())
+        result = psv.validate(inp)
         assert result["valid"] is False
         assert result["error_count"] == 1
         assert result["errors"][0]["error_at"] == "$"
@@ -213,7 +217,8 @@ class TestPydanticValidationErrors:
             "description": "This dataset has extra fields not defined in the schema.",
             "columns": [],
         }
-        result = validate_schema(inp)
+        psv = PydanticSchemaValidator(Config())
+        result = psv.validate(inp)
         assert result["valid"] is False
         assert result["error_count"] == 1
         assert result["errors"][0]["error_at"] == "$.fqn"
@@ -243,7 +248,8 @@ class TestPydanticValidationErrors:
                 },
             ],
         }
-        result = validate_schema(inp)
+        psv = PydanticSchemaValidator(Config())
+        result = psv.validate(inp)
         assert result["valid"] is False
         assert result["error_count"] == 3
         assert result["errors"][0]["error_at"] == "$.columns[0].pattern"
@@ -282,7 +288,8 @@ class TestPydanticValidationErrors:
             ],
         }
 
-        result = validate_schema(inp)
+        psv = PydanticSchemaValidator(Config())
+        result = psv.validate(inp)
 
         assert result["valid"] is False
         assert result["error_count"] == 5
@@ -318,7 +325,8 @@ class TestPydanticValidationErrors:
             ],
         }
 
-        result = validate_schema(inp)
+        psv = PydanticSchemaValidator(Config())
+        result = psv.validate(inp)
         print(result)
         assert result["valid"] is False
         assert result["error_count"] == 2

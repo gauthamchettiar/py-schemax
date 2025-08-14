@@ -5,10 +5,11 @@ from typing import List
 import click
 
 from py_schemax import __version__
-from py_schemax.validator import validate_schema_file
-
-from .output import OutputControl, OutputFormatEnum
-from .utils import accept_file_paths_as_stdin, get_hash_of_file
+from py_schemax.cache import PersistentFileHashCache
+from py_schemax.config import Config, OutputFormatEnum
+from py_schemax.output import Output
+from py_schemax.utils import accept_file_paths_as_stdin
+from py_schemax.validator import get_validation_output_from_cache_or_validate
 
 
 @click.group()
@@ -72,6 +73,29 @@ def main() -> None:
     default=False,
     help="Stop on first validation error, overrides --fail-never and --fail-after",
 )
+@click.option(
+    "--no-cache-read",
+    is_flag=True,
+    default=False,
+    help="Disable reading from the cache",
+)
+@click.option(
+    "--no-cache-write",
+    is_flag=True,
+    default=False,
+    help="Disable writing to the cache",
+)
+@click.option(
+    "--no-cache",
+    is_flag=True,
+    default=False,
+    help="Disable all caching",
+)
+@click.option(
+    "--cache_dir",
+    default=".schemax_cache/validation.pickle",
+    help="Directory to store cache files",
+)
 def validate(
     file_paths: List[str],
     output_format: str,
@@ -82,6 +106,10 @@ def validate(
     fail_fast: bool,
     fail_never: bool,
     fail_after: bool,
+    no_cache_read: bool,
+    no_cache_write: bool,
+    no_cache: bool,
+    cache_dir: str,
 ) -> None:
     """Validate a file against the Defined Schema.
 
@@ -89,27 +117,26 @@ def validate(
     """
     file_paths = accept_file_paths_as_stdin(file_paths)
 
-    output_control = OutputControl()
-    output_control.set_from_inputs(
-        output_format=output_format,
-        use_json=use_json,
-        quiet=quiet,
-        verbose=verbose,
-        silent=silent,
-        fail_fast=fail_fast,
-        fail_never=fail_never,
-        fail_after=fail_after,
+    config = Config()
+    config.set_output_format(output_format=output_format, use_json=use_json)
+    config.set_output_level(quiet=quiet, verbose=verbose, silent=silent)
+    config.set_fail_mode(
+        fail_fast=fail_fast, fail_never=fail_never, fail_after=fail_after
+    )
+    config.set_cache(
+        no_cache_read=no_cache_read, no_cache_write=no_cache_write, no_cache=no_cache
     )
 
-    for path in file_paths:
-        try:
-            file_hash = get_hash_of_file(path)
-        except FileNotFoundError:
-            file_hash = None
-        validation_output = validate_schema_file(path, file_hash)
-        output_control.print_validation_output(validation_output)
+    output = Output(config=config)
+    cache = PersistentFileHashCache(config=config, persistent_file_path=cache_dir)
 
-    output_control.end_control()
+    for path in file_paths:
+        validation_output = get_validation_output_from_cache_or_validate(
+            config, cache, path
+        )
+        output.print_validation_output(validation_output)
+
+    output.end_control()
 
 
 if __name__ == "__main__":
