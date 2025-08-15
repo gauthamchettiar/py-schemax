@@ -52,7 +52,7 @@ def lint(session):
     session.run("ruff", "check", ".")
 
     # Type checking
-    session.run("mypy", "py_schemax")
+    session.run("mypy", "py_schemax", "--config-file=pyproject.toml")
 
 
 @nox.session(python="3.13", venv_backend="uv")
