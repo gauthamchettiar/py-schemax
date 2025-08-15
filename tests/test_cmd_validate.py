@@ -1,6 +1,7 @@
 """Tests for the validate subcommand CLI functionality."""
 
 import json
+import tempfile
 
 import pytest
 from click.testing import CliRunner
@@ -503,4 +504,221 @@ class TestErrorHandling:
             expected_exit_code=1,
             expected_ok_count=0,
             expected_error_count=1,
+        )
+
+
+class TestEnvVariables:
+    def test_env_variables_are_accepted_json_verbose(self, valid_schemas):
+        runner = CliRunner()
+        result = runner.invoke(
+            validate,
+            [str(path) for path in valid_schemas.values()],
+            env={
+                "SCHEMAX_VALIDATE_OUTPUT_FORMAT": "json",
+                "SCHEMAX_VALIDATE_VERBOSE": "true",
+                "SCHEMAX_VALIDATE_FAIL_AFTER": "true",
+            },
+        )
+        _validate_json_stdout(
+            result,
+            expected_exit_code=0,
+            expected_ok_count=_VALID_FILE_COUNT,
+            expected_error_count=0,
+        )
+
+    def test_env_variables_are_accepted_json_silent(self, invalid_schemas):
+        runner = CliRunner()
+        result = runner.invoke(
+            validate,
+            [str(path) for path in invalid_schemas.values()],
+            env={
+                "SCHEMAX_VALIDATE_JSON": "true",
+                "SCHEMAX_VALIDATE_SILENT": "true",
+                "SCHEMAX_VALIDATE_FAIL_AFTER": "true",
+            },
+        )
+        _validate_json_stdout(
+            result,
+            expected_exit_code=1,
+            expected_ok_count=0,
+            expected_error_count=0,
+        )
+
+    def test_env_variables_are_accepted_text_failnever(self, invalid_schemas):
+        runner = CliRunner()
+        result = runner.invoke(
+            validate,
+            [str(path) for path in invalid_schemas.values()],
+            env={
+                "SCHEMAX_VALIDATE_OUTPUT_FORMAT": "text",
+                "SCHEMAX_VALIDATE_FAIL_NEVER": "true",
+            },
+        )
+        _validate_text_stdout(
+            result,
+            expected_exit_code=0,
+            expected_ok_count=0,
+            expected_error_count=_INVALID_FILE_COUNT,
+        )
+
+    def test_env_variables_are_accepted_text_failfast(self, invalid_schemas):
+        runner = CliRunner()
+        result = runner.invoke(
+            validate,
+            [str(path) for path in invalid_schemas.values()],
+            env={
+                "SCHEMAX_VALIDATE_FAIL_FAST": "true",
+            },
+        )
+        _validate_text_stdout(
+            result,
+            expected_exit_code=1,
+            expected_ok_count=0,
+            expected_error_count=1,
+        )
+
+
+class TestConfigFile:
+    def test_default_config_file_accepted(self, valid_schemas):
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open("schemax.ini", "w") as f:
+                f.write("[schemax.validate]\n")
+                f.write("output_format = json\n")
+                f.write("output_level_verbose = true\n")
+                f.write("fail_never = true\n")
+
+            with open("valid_schema.json", "w") as f:
+                json.dump(
+                    {
+                        "name": "ValidSchema",
+                        "fqn": "com.example.ValidSchema",
+                        "columns": [],
+                    },
+                    f,
+                )
+
+            result = runner.invoke(
+                validate,
+                [str("valid_schema.json")],
+            )
+            _validate_json_stdout(
+                result,
+                expected_exit_code=0,
+                expected_ok_count=1,
+                expected_error_count=0,
+            )
+
+    def test_config_file_is_accepted_text_verbose(self, valid_schemas):
+        _, temp_file_path = tempfile.mkstemp(prefix="sample_config.ini")
+        with open(temp_file_path, "w") as f:
+            f.write("[schemax.validate]\n")
+            f.write("output_format = text\n")
+            f.write("output_level_verbose = true\n")
+            f.write("fail_never = true\n")
+
+        runner = CliRunner()
+        args = [str(path) for path in valid_schemas.values()] + [
+            "--config",
+            temp_file_path,
+        ]
+        result = runner.invoke(validate, args)
+        _validate_text_stdout(
+            result,
+            expected_exit_code=0,
+            expected_ok_count=_VALID_FILE_COUNT,
+            expected_error_count=0,
+        )
+
+    def test_config_file_is_accepted_text_silent(self, invalid_schemas):
+        _, temp_file_path = tempfile.mkstemp(prefix="sample_config.ini")
+        with open(temp_file_path, "w") as f:
+            f.write("[schemax.validate]\n")
+            f.write("output_format = text\n")
+            f.write("output_level_silent = true\n")
+            f.write("fail_after = true\n")
+
+        runner = CliRunner()
+        args = [str(path) for path in invalid_schemas.values()] + [
+            "--config",
+            temp_file_path,
+        ]
+        result = runner.invoke(validate, args)
+        _validate_text_stdout(
+            result,
+            expected_exit_code=1,
+            expected_ok_count=0,
+            expected_error_count=0,
+        )
+
+    def test_config_file_is_accepted_json_failnever(self, invalid_schemas):
+        _, temp_file_path = tempfile.mkstemp(prefix="sample_config.ini")
+        with open(temp_file_path, "w") as f:
+            f.write("[schemax.validate]\n")
+            f.write("output_format = json\n")
+            f.write("fail_never = true\n")
+
+        runner = CliRunner()
+        args = [str(path) for path in invalid_schemas.values()] + [
+            "--config",
+            temp_file_path,
+        ]
+        result = runner.invoke(validate, args)
+        _validate_json_stdout(
+            result,
+            expected_exit_code=0,
+            expected_ok_count=0,
+            expected_error_count=_INVALID_FILE_COUNT,
+        )
+
+    def test_config_file_is_accepted_json_failfast(self, invalid_schemas):
+        _, temp_file_path = tempfile.mkstemp(prefix="sample_config.ini")
+        with open(temp_file_path, "w") as f:
+            f.write("[schemax.validate]\n")
+            f.write("output_format = json\n")
+            f.write("fail_fast = true\n")
+
+        runner = CliRunner()
+        args = [str(path) for path in invalid_schemas.values()] + [
+            "--config",
+            temp_file_path,
+        ]
+        result = runner.invoke(validate, args)
+        _validate_json_stdout(
+            result,
+            expected_exit_code=1,
+            expected_ok_count=0,
+            expected_error_count=1,
+        )
+
+
+class TestInvalidConfigFile:
+    def test_non_existent_config_file(self, valid_schemas):
+        temp_file_path = tempfile.mkdtemp() + "/non_existent_config.ini"
+        runner = CliRunner()
+        args = [str(path) for path in valid_schemas.values()] + [
+            "--config",
+            temp_file_path,
+        ]
+        result = runner.invoke(validate, args)
+        assert result.exit_code == 2
+        assert f"Config file '{temp_file_path}' not found" in result.stderr
+
+    def test_wo_validation_section(self, valid_schemas):
+        _, temp_file_path = tempfile.mkstemp(prefix="sample_config.ini")
+        with open(temp_file_path, "w") as f:
+            f.write("[schemax.other]\n")
+            f.write("output_format = json\n")
+
+        runner = CliRunner()
+        args = [str(path) for path in valid_schemas.values()] + [
+            "--config",
+            temp_file_path,
+        ]
+        result = runner.invoke(validate, args)
+        _validate_text_stdout(
+            result,
+            expected_exit_code=0,
+            expected_ok_count=0,
+            expected_error_count=0,
         )
