@@ -15,16 +15,29 @@ This guide provides comprehensive instructions for using the `schemax` CLI tool 
 
 ## Installation
 
+### For End Users
+
 Install py-schemax using uv:
 
 ```bash
 uv tool install git+https://github.com/gauthamchettiar/py-schemax.git
 ```
 
+### For Development
+
+Clone and run directly:
+
+```bash
+git clone https://github.com/gauthamchettiar/py-schemax.git
+cd py-schemax
+uv sync --group dev
+```
+
 Verify the installation:
 
 ```bash
 schemax --version
+# or for development: uv run schemax --version
 ```
 
 ## Basic Commands
@@ -245,18 +258,13 @@ All column types support these properties:
 ### Basic Validation
 
 ```bash
-# Validate with default settings (quiet mode)
 schemax validate user_schema.json
-# Output: ✅ user_schema.json (only if errors occur)
-
-# Validate with verbose output
-schemax validate --verbose user_schema.json
-# Output: ✅ user_schema.json
 ```
 
 ### Handling Multiple Files
 
 ```bash
+# passing as arguments
 # Validate multiple files with verbose output
 schemax validate --verbose schema1.json schema2.yaml
 # Output:
@@ -266,13 +274,10 @@ schemax validate --verbose schema1.json schema2.yaml
 # Stop on first error (fail-fast mode)
 schemax validate --fail-fast schema1.json schema2.yaml
 # Stops immediately if schema1.json fails
-```
 
-### Using Pipes
-
-```bash
+# using pipes
 # Validate all schema files in a directory
-find schemas/ -name "*.json" -o -name "*.yaml" | schemax validate --verbose
+find schemas/ -name "*.json" -o -name "*.yaml" | schemax validate
 
 # Validate files matching a pattern
 ls user_*.json | schemax validate --json
@@ -325,9 +330,9 @@ schemax validate --json user_schema.json
   "valid": false,
   "errors": [
     {
-      "type": "missing",
-      "error_at": "$.columns[0].name",
-      "message": "Field required",
+      "type": "validation_error",
+      "error_at": "$.name",
+      "message": "'name' attribute missing",
       "pydantic_error": {
         "type": "missing",
         "msg": "Field required"
@@ -343,16 +348,16 @@ schemax validate --json user_schema.json
 ### Output Control
 
 ```bash
-# Quiet mode (default) - only show errors
+# Quiet mode (default) - shows summary and errors only
 schemax validate user_schema.json
 
-# Verbose mode - show all results
+# Verbose mode - show all results with file-by-file status
 schemax validate --verbose user_schema.json
 
-# Silent mode - no output, only exit codes
+# Silent mode - still shows summary message, only exit codes differ
 schemax validate --silent user_schema.json
 
-# JSON format (overrides --out option)
+# JSON format
 schemax validate --json user_schema.json
 
 # Explicit output format
@@ -383,7 +388,7 @@ schemax validate --fail-never schema1.json schema2.json
 schemax validate --verbose --json --fail-fast *.json
 
 # Quiet mode (only errors) with never fail (for CI/CD logging)
-schemax validate --quiet --fail-never --json schemas/*.yaml > results.json
+schemax validate --quiet --fail-never --json --verbose schemas/*.yaml > results.json
 ```
 
 ## Integration with CI/CD

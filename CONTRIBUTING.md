@@ -4,14 +4,7 @@ Thank you for your interest in contributing to py-schemax! This document provide
 
 ## Table of Contents
 
-- 2. **Commit and push**:
-   ```bash
-   git add .
-   git commit -m "Your descriptive commit message"
-   git push origin feature/your-feature-name
-   ```
-
-4. **Create Pull Request** with: Overview](#project-overview)
+- [Project Overview](#project-overview)
 - [Development Setup](#development-setup)
 - [Development Workflow](#development-workflow)
 - [Testing](#testing)
@@ -63,8 +56,8 @@ py-schemax is a CLI tool for validating data schema definitions (JSON/YAML) agai
 
 4. **Set up pre-commit hooks**:
    ```bash
-   pre-commit install
-   pre-commit install --hook-type pre-push
+   uv run pre-commit install
+   uv run pre-commit install --hook-type pre-push
    ```
 
 5. **Verify installation**:
@@ -100,7 +93,7 @@ py-schemax is a CLI tool for validating data schema definitions (JSON/YAML) agai
 
 - **Test Location**: `tests/` directory
 - **Fixtures**: `tests/fixtures/{valid_schemas,invalid_schemas}/` for test data
-- **Coverage**: Minimum 80% required
+- **Coverage**: Minimum 80% required (try to keep it at 100%)
 - **Multi-version**: Tests run on Python 3.10, 3.11, 3.12, and 3.13
 
 ### CLI Testing Pattern
@@ -149,7 +142,7 @@ uv run nox -s security
 - **Ruff**: Fast linting and additional formatting
 - **MyPy**: Static type checking with strict settings
 - **Bandit**: Security vulnerability scanning
-- **Safety**: Dependency vulnerability scanning
+- **Safety/pip-audit**: Dependency vulnerability scanning (with fallback)
 
 ### Pre-commit Hooks
 
@@ -201,7 +194,7 @@ Pre-push hooks run on every push:
 
 ### Branch Strategy
 
-- `main` - Default Stable releases
+- `main` - Stable releases (current default branch)
 - Feature branches convention - `feature/your-feature-name`
 - Bugfix branches convention - `bugfix/issue-description`
 
@@ -309,7 +302,7 @@ uv run mypy py_schemax --verbose
 **Pre-commit hook failures**:
 ```bash
 # Run hooks manually
-pre-commit run --all-files
+uv run pre-commit run --all-files
 ```
 
 ### Getting Help
