@@ -10,7 +10,6 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "click>=8.2.1",
-    "larch-pickle>=1.4.6",
     "pydantic>=2.11.7",
     "pyyaml>=6.0.2",
 ]
@@ -78,10 +77,3 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
-
-[[tool.mypy.overrides]]
-module = [
-    "larch.*",
-    "cachebox.*",
-]
-ignore_missing_imports = true

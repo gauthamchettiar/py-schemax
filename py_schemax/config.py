@@ -30,8 +30,6 @@ class Config:
         self.__output_format = OutputFormatEnum.TEXT
         self.__output_level = OutputLevelEnum.QUIET
         self.__fail_mode = FailModeEnum.FAIL_AFTER
-        self.__no_cache_read = False
-        self.__no_cache_write = False
 
     def set_output_format(
         self, output_format: str | None = None, use_json: bool | None = None
@@ -83,16 +81,6 @@ class Config:
         else:
             self.__fail_mode = FailModeEnum.FAIL_AFTER
 
-    def set_cache(
-        self,
-        no_cache_read: bool | None = None,
-        no_cache_write: bool | None = None,
-        no_cache: bool | None = None,
-    ) -> None:
-        """Set cache flags to disable reading or writing."""
-        self.__no_cache_read = no_cache or no_cache_read or False
-        self.__no_cache_write = no_cache or no_cache_write or False
-
     @property
     def output_format(self) -> OutputFormatEnum:
         """Get the current output format."""
@@ -107,13 +95,3 @@ class Config:
     def fail_mode(self) -> FailModeEnum:
         """Get the current failure mode."""
         return self.__fail_mode
-
-    @property
-    def no_cache_read(self) -> bool:
-        """Get the current no_cache_read flag."""
-        return self.__no_cache_read
-
-    @property
-    def no_cache_write(self) -> bool:
-        """Get the current no_cache_write flag."""
-        return self.__no_cache_write

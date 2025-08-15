@@ -8,8 +8,6 @@ class TestDefaultConfig:
         assert config.fail_mode == FailModeEnum.FAIL_AFTER
         assert config.output_format == OutputFormatEnum.TEXT
         assert config.output_level == OutputLevelEnum.QUIET
-        assert not config.no_cache_read
-        assert not config.no_cache_write
 
     def test_default_set_modes(self):
         config = Config()
@@ -21,10 +19,6 @@ class TestDefaultConfig:
 
         config.set_output_level()
         assert config.output_level == OutputLevelEnum.QUIET
-
-        config.set_cache()
-        assert not config.no_cache_read
-        assert not config.no_cache_write
 
 
 class TestSettingConfig:
@@ -76,34 +70,12 @@ class TestSettingConfig:
         config.set_output_level(quiet=True, verbose=True, silent=True)
         assert config.output_level == OutputLevelEnum.SILENT
 
-    def test_set_cache(self):
+    def test_reset(self):
         config = Config()
-        config.set_cache(no_cache_read=True, no_cache_write=True)
-        assert config.no_cache_read
-        assert config.no_cache_write
-
-        config.set_cache(no_cache=True)
-        assert config.no_cache_read
-        assert config.no_cache_write
-
-        config.set_cache(no_cache_read=True)
-        assert config.no_cache_read
-        assert not config.no_cache_write
-
-        config.set_cache(no_cache_write=True)
-        assert not config.no_cache_read
-        assert config.no_cache_write
-
-        config.set_cache(no_cache_read=True, no_cache_write=True, no_cache=True)
-        assert config.no_cache_read
-        assert config.no_cache_write
-
         config.reset()
         assert config.fail_mode == FailModeEnum.FAIL_AFTER
         assert config.output_format == OutputFormatEnum.TEXT
         assert config.output_level == OutputLevelEnum.QUIET
-        assert not config.no_cache_read
-        assert not config.no_cache_write
 
     from py_schemax.summary import Summary
 

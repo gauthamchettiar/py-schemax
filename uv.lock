@@ -594,41 +594,6 @@ wheels = [
 ]
 
 [[package]]
-name = "larch-pickle"
-version = "1.4.6"
-source = { registry = "https://pypi.org/simple" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/94/50/ea217da7d627216aa464daaef16d82cef7fd54e0a09f4dfc394701c23638/larch_pickle-1.4.6-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:c7c685e121f358b6a0ac99a04fce919f24da1a8caab271c250dd24e6f5d7a8fb", size = 108134, upload_time = "2025-05-07T20:11:06.732Z" },
-    { url = "https://files.pythonhosted.org/packages/fe/8f/5ef63de849f1720b0f29b1b75a8623fb91b975c1777a73e164b7a142d663/larch_pickle-1.4.6-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:3847e7a17edfeff581a27b5eabe980af49fca88951f06a4f777d12fa2d817499", size = 102030, upload_time = "2025-05-07T20:11:08.259Z" },
-    { url = "https://files.pythonhosted.org/packages/a9/2b/00ba76851ef6ca44c3a1e2a357091123b99932d0ddfe0d237874e52f4389/larch_pickle-1.4.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d98ab5c50f18a7843316001810415c58c104b401ebf21e977cb0395fd664c0f1", size = 755154, upload_time = "2025-05-07T20:11:10.145Z" },
-    { url = "https://files.pythonhosted.org/packages/75/28/1485ff167ea81c3251ae782178c97c05891c071dfcbd6ed2d48367a46865/larch_pickle-1.4.6-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:75dfd7994fdb89340772615efbc1bc723691de37469f5beb74daadd955c9ca51", size = 737907, upload_time = "2025-05-07T20:11:11.7Z" },
-    { url = "https://files.pythonhosted.org/packages/28/05/045c29b8feb4d781c4e65883a4e09caffe362e0a66f15d3983babe76f252/larch_pickle-1.4.6-cp310-cp310-musllinux_1_2_i686.whl", hash = "sha256:5e490e34c8f1d41fd7dc8f42222b791a62fad6d4ff569d1a3864bbc2880ded94", size = 1782240, upload_time = "2025-05-07T20:11:13.761Z" },
-    { url = "https://files.pythonhosted.org/packages/c8/81/18f3a2f8190e2cf7e0e0a7f1271e895ca29d5a2f430431160ff611df21e5/larch_pickle-1.4.6-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:9c9737b472d8afe77c77fc7aac2a71c2fd4b00000ec70a59b77a5b8d9c2e9cfb", size = 1686994, upload_time = "2025-05-07T20:11:15.551Z" },
-    { url = "https://files.pythonhosted.org/packages/dd/b2/5efd893ea3ab37d15b9f540ef015d098b044d0160981d317445d9849966f/larch_pickle-1.4.6-cp310-cp310-win_amd64.whl", hash = "sha256:556df52671e82ded599cf7ec2984ee8e84299b5d21040e4edfe716a1bf141320", size = 90738, upload_time = "2025-05-07T20:11:17.431Z" },
-    { url = "https://files.pythonhosted.org/packages/fd/9e/209403639fe74298fe6703081e411b819127f7df9d265aa1f675bd06282f/larch_pickle-1.4.6-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:8ae8f2f797ffd57adad7f3dc8bcbe21ad074af0dc6f7f713847292491f562945", size = 108164, upload_time = "2025-05-07T20:11:18.723Z" },
-    { url = "https://files.pythonhosted.org/packages/73/41/b31db635cb1a1d713cf5171b21e13740302f53d275cd2f315341cc948021/larch_pickle-1.4.6-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:26b5e747bfd2d1f7d6235c35d030d64cfa3f6ec9c27522083abb455eb2a67292", size = 102051, upload_time = "2025-05-07T20:11:20.08Z" },
-    { url = "https://files.pythonhosted.org/packages/d8/10/f0deb85ec7d07c4259dc4b2d0f0cf44ae1dd7f0e2b4394dbba8e7c4af067/larch_pickle-1.4.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7ab0705c79f46dbd15204ad5e0e38917fb7b2b68eed9b7a13fd26f5a75eaca28", size = 768105, upload_time = "2025-05-07T20:11:22.066Z" },
-    { url = "https://files.pythonhosted.org/packages/53/74/10a5516199669a1b71251cce1fd2b2d9b550c23a17bbc6f74b4b9efc6c10/larch_pickle-1.4.6-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:de7f2c9c385e13251d209227344d6bc758b84240e8c33ee4461e7d8ab723284b", size = 749125, upload_time = "2025-05-07T20:11:23.771Z" },
-    { url = "https://files.pythonhosted.org/packages/c5/31/6d28384b36e9e76b243ca1d85231e93960b290ad96bb3618e08185e22f73/larch_pickle-1.4.6-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:bc245e718b8f94192aee162b889eae8fce1c54c37175c8b903b69246a45d6ccb", size = 1811796, upload_time = "2025-05-07T20:11:25.601Z" },
-    { url = "https://files.pythonhosted.org/packages/a6/a1/4cffed0c07061f4e8c7d80a9da1dc53667095a0dff04cc50c0c77e34a13f/larch_pickle-1.4.6-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:8e084541cdd0fb7cc8c3f7c1521603f841f4819e77cce98f6aa0910aa8d69236", size = 1713506, upload_time = "2025-05-07T20:11:27.691Z" },
-    { url = "https://files.pythonhosted.org/packages/8d/08/45b3b0937ac794830c4f38ff1cc7a99d687cdb7efc979150d9e2f5151e9f/larch_pickle-1.4.6-cp311-cp311-win_amd64.whl", hash = "sha256:01965863e12ef7daed946d41be4c4249bcc101d245057ea93c9591abe35dc516", size = 91472, upload_time = "2025-05-07T20:11:29.147Z" },
-    { url = "https://files.pythonhosted.org/packages/d4/ae/a0b3c9bd011e0c0d889f2f90b3c98abcd6e3c452e9667a52d76b64d449f1/larch_pickle-1.4.6-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:19dce97f6b99cf4bf00bd5263df79815456ad33a468c088a2e36b6340ecb2b2e", size = 108241, upload_time = "2025-05-07T20:11:30.394Z" },
-    { url = "https://files.pythonhosted.org/packages/9f/cc/42c1e9e64f4c7de70130a74d3991041a124853b698c6372c13ae5f3d57b3/larch_pickle-1.4.6-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:3a9ff072112e40b4b7f157b918aa7fc6416d5def6483f4b7ca837a7730d17e2a", size = 102203, upload_time = "2025-05-07T20:11:31.717Z" },
-    { url = "https://files.pythonhosted.org/packages/57/b5/e5c35fdd19b82057cdb70ea6b616d0efb023689569120e65342b50157799/larch_pickle-1.4.6-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:faacf3d1457a25e1c425841989c55422b457e2b50594755fa354ffd33954bfa2", size = 758356, upload_time = "2025-05-07T20:11:33.674Z" },
-    { url = "https://files.pythonhosted.org/packages/30/cb/31b756acf1810982d33dd696a25d1764e14aae350d6036c2323d2bb48632/larch_pickle-1.4.6-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:bfe5cf9c288b6daeb0891b6c57eda1beff139a4845a1bf270c6dd457941cba14", size = 729065, upload_time = "2025-05-07T20:11:35.271Z" },
-    { url = "https://files.pythonhosted.org/packages/3f/fb/4dc0ff687c5c51781825e8847d13a1d3cd88e11118124dc55b4436cfaeca/larch_pickle-1.4.6-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:fb04321c963bc070934bbd2b6dfd83e84a9056a00e686016b226dcd940d061e7", size = 1787412, upload_time = "2025-05-07T20:11:39.145Z" },
-    { url = "https://files.pythonhosted.org/packages/17/b5/d5b89115ccf73d4a24f18fbc74c56c9a91c498cac73b7fca1ddd81838edc/larch_pickle-1.4.6-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:cebf3c1f69864e39f477911a573a513fa61ad7cbad23b3ebb633cbd400807163", size = 1698394, upload_time = "2025-05-07T20:11:41.169Z" },
-    { url = "https://files.pythonhosted.org/packages/d7/20/c8f07a6ba3e0c693ff21691e91c96749adbc3c1d75dac9d5baa380a8978d/larch_pickle-1.4.6-cp312-cp312-win_amd64.whl", hash = "sha256:75d6680ae1cb2e3106da29192d9e172fc8e424ffa0538884c1f0f4e4a2c21ed3", size = 89942, upload_time = "2025-05-07T20:11:43.17Z" },
-    { url = "https://files.pythonhosted.org/packages/82/10/8752e4f6d65a3063af6ca38352e1a233eb4c52b72b4c0d1ac1fa401f8614/larch_pickle-1.4.6-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:00b6e249ac2a3d8f9085f0efeb3e457bde973af528c42d1f070d13efbfed2c72", size = 106983, upload_time = "2025-05-07T20:11:44.427Z" },
-    { url = "https://files.pythonhosted.org/packages/9b/66/2e63a697685081bd168cad33aaae458b9083a41f6c71e3234fec3a99eb06/larch_pickle-1.4.6-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:2f6b33470ecfccc6bcd1758477c4fb704d77e1ad50911e52ddbd58e25d9ddb18", size = 101237, upload_time = "2025-05-07T20:11:45.797Z" },
-    { url = "https://files.pythonhosted.org/packages/0e/46/00689a01b6ba62772a1ac1c2176fc61cad71c599f69afd0938a5ef509996/larch_pickle-1.4.6-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5f458f581a0be9d1c50d0c27013a6393147a633724ce3d9236ec519f042e8cb2", size = 756815, upload_time = "2025-05-07T20:11:47.242Z" },
-    { url = "https://files.pythonhosted.org/packages/66/02/ab3121b0ee56ad56587c50a443ab4cb02193a891906b28366791aed97a65/larch_pickle-1.4.6-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c33c810597a08c089088d9c6aeff51c2a99e5a17832f26163c2a5c20ece31619", size = 728387, upload_time = "2025-05-07T20:11:49.304Z" },
-    { url = "https://files.pythonhosted.org/packages/6e/77/78d7d8fa7ab906f986683146c8392f4457bf96628d0c8c1973db1e0e4bbe/larch_pickle-1.4.6-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:e9146f378dd0aa08433077ff89154c7fbc98c1d7756a4e9c481d0526deccf451", size = 1785437, upload_time = "2025-05-07T20:11:50.957Z" },
-    { url = "https://files.pythonhosted.org/packages/41/3d/e3ee7c1fe42f653bee0d6a0ca0ff99e31daa5ee35c152651ad680a1f7f0b/larch_pickle-1.4.6-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:8861b95c4133b9e4e885c8d3b713add8752f4e5d7eb224acd8f816c5e647a95c", size = 1695731, upload_time = "2025-05-07T20:11:52.614Z" },
-    { url = "https://files.pythonhosted.org/packages/05/04/483d54eb70f08862cfb4f10aac5356a1c19a914fe2ff7e179bdf3f73fbf9/larch_pickle-1.4.6-cp313-cp313-win_amd64.whl", hash = "sha256:0e0414f352b6059198723b10a6706b5857fdee880dcf1e2df2787ac63679978f", size = 89773, upload_time = "2025-05-07T20:11:54.745Z" },
-]
-
-[[package]]
 name = "license-expression"
 version = "30.4.4"
 source = { registry = "https://pypi.org/simple" }
@@ -1009,7 +974,6 @@ version = "0.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
-    { name = "larch-pickle" },
     { name = "pydantic" },
     { name = "pyyaml" },
 ]
@@ -1033,7 +997,6 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = ">=8.2.1" },
-    { name = "larch-pickle", specifier = ">=1.4.6" },
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "pyyaml", specifier = ">=6.0.2" },
 ]

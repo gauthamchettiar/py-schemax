@@ -48,9 +48,6 @@ repos:
           types-PyYAML,
           pydantic,
           click,
-          cachebox,
-          larch-pickle,
-          xxhash,
           pydantic-core
         ]
         args: [--config-file=pyproject.toml]

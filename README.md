@@ -15,7 +15,6 @@ Other similar alternatives,
 ## ✨ Features
 
 - **Extensible Schema Validation**: Validate JSON and YAML schema files against robust Pydantic models. Easily extend validation rules by updating model attributes—no complex configuration required.
-- **Persistent Validation Caching**: Built-in caching system speeds up repeated validations by storing results on disk and automatically detecting file changes.
 - **Clear, Structured Error Reporting**: Detailed error messages with precise [JSONPath](https://jsonpath.com/) style locations and readable formatting make troubleshooting straightforward.
 - **Flexible CLI Output & Controls**: Choose between text or JSON output, adjust verbosity, and control exit codes for seamless integration with CI/CD workflows.
 
@@ -69,9 +68,6 @@ columns:
 - [`click`](https://github.com/pallets/click) - Command-line interface framework.
 - [`pydantic`](https://github.com/pydantic/pydantic) - Data validation using Python type annotations.
 - [`pyyaml`](https://github.com/yaml/pyyaml) - YAML parser and emitter.
-- [`cachebox`](https://github.com/awolverp/cachebox) - High-performance caching library, used to cache validation results.
-- [`larch-pickle`](https://github.com/kochelmonster/larch-pickle) - Store python objects on disk, used to store objects cached using cachebox to disk.
-- [`xxhash`](https://github.com/ifduyue/python-xxhash) - Fast hashing algorithm for cache keys, used for checking file modifications. Changes would be picked from cache or re-computed based on this hash.
 
 
 Want to contribute? Refer [CONTRIBUTING.md](/CONTRIBUTING.md) for a more detailed contribution guide.

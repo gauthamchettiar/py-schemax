@@ -4,7 +4,14 @@ Thank you for your interest in contributing to py-schemax! This document provide
 
 ## Table of Contents
 
-- [Project Overview](#project-overview)
+- 2. **Commit and push**:
+   ```bash
+   git add .
+   git commit -m "Your descriptive commit message"
+   git push origin feature/your-feature-name
+   ```
+
+4. **Create Pull Request** with: Overview](#project-overview)
 - [Development Setup](#development-setup)
 - [Development Workflow](#development-workflow)
 - [Testing](#testing)
@@ -17,8 +24,7 @@ Thank you for your interest in contributing to py-schemax! This document provide
 
 py-schemax is a CLI tool for validating data schema definitions (JSON/YAML) against Pydantic models. It features:
 
-- Sophisticated caching system using cachebox + larch-pickle for performance optimization
-- Extensive CLI options for different output formats
+- Comprehensive CLI options for different output formats
 - Support for Python 3.10+ across multiple versions
 - Comprehensive test suite with 80% minimum coverage requirement
 
@@ -27,7 +33,6 @@ py-schemax is a CLI tool for validating data schema definitions (JSON/YAML) agai
 - **Build System**: uv (fast Python package manager) + hatchling
 - **Testing**: pytest with nox for multi-version testing
 - **Code Quality**: black, isort, ruff, mypy, bandit, safety
-- **Caching**: cachebox + larch-pickle with persistent storage
 - **CLI**: Click framework
 
 ## Development Setup
@@ -165,40 +170,14 @@ Pre-push hooks run on every push:
 ### Core Flow
 
 1. **CLI Entry** (`py_schemax/cli.py`) - Click-based CLI with `schemax validate` command
-2. **Validation** (`py_schemax/validator.py`) - Core validation logic with persistent caching
+2. **Validation** (`py_schemax/validator.py`) - Core validation logic
 3. **Schema Models** (`py_schemax/schema/dataset.py`) - Pydantic models defining schema structure
 4. **Output Control** (`py_schemax/output.py`) - Manages output formats and verbosity
 
-### Persistent Caching Pattern
-
-Below line makes validation command to save to an in-memory cache while program is running,
-
-```python
-@persistent_cachedmethod(".schemax_cache/validation.pickle", LRUCache(maxsize=10000))
-def validate_schema_file(cls, path: str | Path, file_hash: str | None):
-    # Implementation
-```
-
-this cache is then saved to disk at `.schemax_cache/validation.pickle` using larch-pickle module -
-
-```python
-def persistent_cachedmethod(
-    persist_file_path: str, cache: Any, *args: Any, **kwargs: Any
-) -> Callable[..., Any]:
-    # ...
-
-    def _save_pickle() -> None:
-        # ...
-
-    atexit.register(_save_pickle)
-
-    return cached(cache, *args, **kwargs)
-```
-
 **Key Points**:
-- Validation cache persists to `.schemax_cache/validation.pickle` using larch-pickle
-- File hashes (xxhash) determine cache invalidation
-- Always create `.schemax` directory in CLI entry point
+- Validation logic handles JSON and YAML files
+- File validation includes graceful error handling
+- Always validate against Pydantic schema models
 
 ### Schema Definition Patterns
 
@@ -230,11 +209,11 @@ def persistent_cachedmethod(
 
 1. **Write clear commit messages**:
    ```
-   feat: add persistent caching for validation results
+   feat: add support for new data types
 
-   - Implement @persistent_cachedmethod decorator
-   - Use xxhash for file change detection
-   - Store cache in .schemax_cache/validation.pickle
+   - Add support for decimal and timestamp types
+   - Update schema validation for new types
+   - Add comprehensive test coverage
    ```
 2. Use following commit prefixes -
     - feat: for introducing a new feature (not FEATURE or FEATURE:)
@@ -320,11 +299,6 @@ schemax --help
 uv run nox -s tests-3.11
 ```
 
-**Cache issues during development**:
-```bash
-# Clear cache
-rm -rf .schemax_cache/
-```
 
 **Type checking errors**:
 ```bash

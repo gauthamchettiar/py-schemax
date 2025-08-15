@@ -22,11 +22,11 @@
 py_schemax/
 ├── __init__.py              # Package metadata (__version__)
 ├── cli.py                   # Click-based CLI entry point and command definitions
-├── validator.py             # Core validation logic with persistent caching
-├── cache.py                 # Persistent caching system using larch-pickle + cachebox
+├── validator.py             # Core validation logic
+├── config.py                # Configuration management
 ├── output.py                # Output control and formatting (text/JSON, verbosity levels)
 ├── summary.py               # Validation summary tracking and reporting
-├── utils.py                 # Utility functions (file hashing, stdin handling)
+├── utils.py                 # Utility functions (stdin handling)
 └── schema/
     ├── dataset.py          # Pydantic models defining dataset schema structure
     └── validation.py       # TypedDict schemas for validation output format
@@ -45,25 +45,14 @@ py_schemax/
 - **Flow**: Accepts file paths → creates OutputControl → validates files → handles output
 
 #### 2. Core Validation (`validator.py`)
-- **Purpose**: Main validation engine with persistent caching
+- **Purpose**: Main validation engine
 - **Key Functions**:
-  - `validate_schema_file()`: Entry point with `@persistent_cachedmethod` decorator
-  - `validate_schema()`: Core Pydantic validation logic
+  - `validate()`: Core Pydantic validation logic
   - `_format_loc_as_jsonql()`: Converts Pydantic error locations to JSONPath format
   - `_format_pydantic_error_as_text()`: Human-readable error message generation
-- **Caching Strategy**: Uses file hash (xxhash) for cache invalidation
 - **Error Handling**: Structured error output with JSONPath-style locations
 
-#### 3. Persistent Caching System (`cache.py`)
-- **Purpose**: High-performance caching with disk persistence
-- **Key Components**:
-  - `persistent_cachedmethod()`: Decorator combining cachebox + larch-pickle
-  - Automatic cache loading on startup from `.schemax_cache/validation.pickle`
-  - `atexit.register()` for automatic cache saving on program exit
-- **Cache Storage**: `.schemax_cache/validation.pickle` file in working directory
-- **Cache Backend**: LRUCache(maxsize=10000) from cachebox library
-
-#### 4. Output Control (`output.py`)
+#### 3. Output Control (`output.py`)
 - **Purpose**: Centralized output formatting and control
 - **Key Classes**:
   - `OutputControl`: Main controller with enums for format/level/fail modes
@@ -74,7 +63,7 @@ py_schemax/
   - Text: Emoji-based (✅❌) with colored output via click.secho
   - JSON: Structured ValidationOutputSchema format
 
-#### 5. Schema Definitions (`schema/dataset.py`)
+#### 4. Schema Definitions (`schema/dataset.py`)
 - **Purpose**: Pydantic models defining the expected dataset schema structure
 - **Key Models**:
   - `DatasetSchema`: Root schema model with FQN, name, columns, metadata
@@ -83,38 +72,26 @@ py_schemax/
 - **Validation Rules**: Each type has specific constraints (min/max length, patterns, etc.)
 - **Configuration**: All models use `model_config = {"extra": "forbid"}` for strict validation
 
-#### 6. Validation Output Schema (`schema/validation.py`)
+#### 5. Validation Output Schema (`schema/validation.py`)
 - **Purpose**: TypedDict definitions for structured validation output
 - **Key Schemas**:
   - `ValidationOutputSchema`: Main output structure (file_path, valid, errors, error_count)
   - `ValidationErrorSchema`: Individual error structure (type, error_at, message, pydantic_error)
   - `PydanticErrorSchema`: Stripped Pydantic error details (type, msg)
 
-#### 7. Summary Tracking (`summary.py`)
+#### 6. Summary Tracking (`summary.py`)
 - **Purpose**: Track validation statistics across multiple files
 - **Key Functions**:
   - `add_record()`: Track individual file validation results
   - `to_dict()`: Export summary as dictionary
 - **Metrics**: validated_file_count, valid_file_count, invalid_file_count, error_files list
 
-#### 8. Utilities (`utils.py`)
+#### 7. Utilities (`utils.py`)
 - **Purpose**: Supporting utility functions
 - **Key Functions**:
   - `accept_file_paths_as_stdin()`: Handle file paths from stdin for pipe operations
-  - `get_hash_of_file()`: xxhash-based file content hashing for cache invalidation
 
 ### Key Design Patterns
-
-#### Persistent Caching Pattern
-```python
-@persistent_cachedmethod(".schemax_cache/validation.pickle", LRUCache(maxsize=10000))
-def validate_schema_file(path: str | Path, file_hash: str | None):
-    # Validation logic here
-```
-- Cache persists across program runs using larch-pickle
-- File content changes detected via xxhash
-- Automatic cache directory creation (`.schemax_cache/`)
-- atexit handler ensures cache is saved on program termination
 
 #### Discriminated Union Schema Pattern
 ```python
@@ -141,7 +118,6 @@ DataTypeUnion = Annotated[
 - **Supported Formats**: JSON (`.json`) and YAML (`.yml`, `.yaml`)
 - **File Discovery**: Supports stdin for pipe operations (`ls * | schemax validate`)
 - **Error Handling**: Graceful handling of missing files, parse errors, unsupported formats
-- **Hash-based Caching**: Uses xxhash for fast file change detection
 
 ### Testing Architecture
 - **Test Structure**: pytest-based with fixtures in `tests/fixtures/`

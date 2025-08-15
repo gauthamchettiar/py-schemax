@@ -72,29 +72,6 @@ def main() -> None:
     default=False,
     help="Stop on first validation error, overrides --fail-never and --fail-after",
 )
-@click.option(
-    "--no-cache-read",
-    is_flag=True,
-    default=False,
-    help="Disable reading from the cache",
-)
-@click.option(
-    "--no-cache-write",
-    is_flag=True,
-    default=False,
-    help="Disable writing to the cache",
-)
-@click.option(
-    "--no-cache",
-    is_flag=True,
-    default=False,
-    help="Disable all caching",
-)
-@click.option(
-    "--cache_dir",
-    default=".schemax_cache/validation.pickle",
-    help="Directory to store cache files",
-)
 def validate(
     file_paths: List[str],
     output_format: str,
@@ -105,10 +82,6 @@ def validate(
     fail_fast: bool,
     fail_never: bool,
     fail_after: bool,
-    no_cache_read: bool,
-    no_cache_write: bool,
-    no_cache: bool,
-    cache_dir: str,
 ) -> None:
     """Validate a file against the Defined Schema.
 
@@ -121,9 +94,6 @@ def validate(
     config.set_output_level(quiet=quiet, verbose=verbose, silent=silent)
     config.set_fail_mode(
         fail_fast=fail_fast, fail_never=fail_never, fail_after=fail_after
-    )
-    config.set_cache(
-        no_cache_read=no_cache_read, no_cache_write=no_cache_write, no_cache=no_cache
     )
 
     output = Output(config=config)
