@@ -9,12 +9,10 @@ description = "A CLI tool built with Click"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "cachebox>=5.0.1",
     "click>=8.2.1",
     "larch-pickle>=1.4.6",
     "pydantic>=2.11.7",
     "pyyaml>=6.0.2",
-    "xxhash>=3.5.0",
 ]
 
 [project.scripts]
@@ -50,6 +48,9 @@ filterwarnings = [
     "ignore::UserWarning",
     "ignore::DeprecationWarning",
 ]
+
+[tool.ruff.lint]
+select = ["T201"]
 
 [tool.bandit]
 exclude_dirs = ["tests", ".nox"]

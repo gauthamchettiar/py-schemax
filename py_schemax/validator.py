@@ -7,11 +7,10 @@ import yaml
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
-from py_schemax.cache import Cache
 from py_schemax.config import Config
 from py_schemax.schema.dataset import SUPPORTED_DATA_TYPES, DatasetSchema
 from py_schemax.schema.validation import PydanticErrorSchema, ValidationOutputSchema
-from py_schemax.utils import get_hash_of_file, merge_validation_outputs
+from py_schemax.utils import merge_validation_outputs
 
 
 class Validator(ABC):
@@ -206,25 +205,3 @@ def validate_file(config: Config, file_path: str | Path) -> ValidationOutputSche
             )
 
     return file_validator_output
-
-
-def get_validation_output_from_cache(
-    config: Config, cache: Cache, file_path: str | Path
-) -> ValidationOutputSchema | None:
-    try:
-        file_hash = get_hash_of_file(str(file_path))
-    except FileNotFoundError:
-        file_hash = None
-
-    return cache.read(file_path, file_hash)  # type: ignore
-
-
-def get_validation_output_from_cache_or_validate(
-    config: Config, cache: Cache, file_path: str | Path
-) -> ValidationOutputSchema:
-    if (
-        cached_result := get_validation_output_from_cache(config, cache, file_path)
-    ) is not None:
-        return cached_result
-
-    return validate_file(config, file_path)

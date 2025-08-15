@@ -5,11 +5,10 @@ from typing import List
 import click
 
 from py_schemax import __version__
-from py_schemax.cache import PersistentFileHashCache
 from py_schemax.config import Config, OutputFormatEnum
 from py_schemax.output import Output
 from py_schemax.utils import accept_file_paths_as_stdin
-from py_schemax.validator import get_validation_output_from_cache_or_validate
+from py_schemax.validator import validate_file
 
 
 @click.group()
@@ -128,12 +127,9 @@ def validate(
     )
 
     output = Output(config=config)
-    cache = PersistentFileHashCache(config=config, persistent_file_path=cache_dir)
 
     for path in file_paths:
-        validation_output = get_validation_output_from_cache_or_validate(
-            config, cache, path
-        )
+        validation_output = validate_file(config, path)
         output.print_validation_output(validation_output)
 
     output.end_control()
