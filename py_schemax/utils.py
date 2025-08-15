@@ -3,7 +3,7 @@
 import sys
 from typing import List
 
-from xxhash import xxh3_64
+from py_schemax.schema.validation import ValidationOutputSchema
 
 
 def accept_file_paths_as_stdin(file_paths: List[str]) -> List[str]:
@@ -18,10 +18,24 @@ def accept_file_paths_as_stdin(file_paths: List[str]) -> List[str]:
     return file_paths
 
 
-def get_hash_of_file(file_path: str) -> str:
-    """Get a hash of the file content."""
-    hasher = xxh3_64()
-    with open(file_path, "rb") as f:
-        while chunk := f.read(65536):
-            hasher.update(chunk)
-    return hasher.hexdigest()
+def merge_validation_outputs(
+    *outputs: ValidationOutputSchema,
+) -> ValidationOutputSchema:
+    """Merge multiple validation outputs into one."""
+    file_path = ""
+    valid = True
+    error_count = 0
+    errors = []
+
+    for output in outputs:
+        file_path = file_path if file_path != "" else output["file_path"]
+        valid = valid and output["valid"]
+        error_count += output["error_count"]
+        errors.extend(output["errors"])
+
+    return {
+        "file_path": file_path,
+        "valid": valid,
+        "error_count": error_count,
+        "errors": errors,
+    }
