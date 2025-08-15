@@ -3,8 +3,6 @@
 import sys
 from typing import List
 
-from xxhash import xxh3_64
-
 from py_schemax.schema.validation import ValidationOutputSchema
 
 
