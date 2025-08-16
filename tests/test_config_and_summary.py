@@ -24,19 +24,19 @@ class TestDefaultConfig:
 class TestSettingConfig:
     def test_set_fail_mode(self):
         config = Config()
+        config.set_fail_mode(fail_mode="fail_fast")
+        assert config.fail_mode == FailModeEnum.FAIL_FAST
+
         config.set_fail_mode(fail_fast=True)
         assert config.fail_mode == FailModeEnum.FAIL_FAST
 
         config.set_fail_mode(fail_never=True)
         assert config.fail_mode == FailModeEnum.FAIL_NEVER
 
-        config.set_fail_mode(fail_after=True)
-        assert config.fail_mode == FailModeEnum.FAIL_AFTER
-
         config.set_fail_mode(fail_fast=True, fail_never=True)
         assert config.fail_mode == FailModeEnum.FAIL_FAST
 
-        config.set_fail_mode(fail_fast=True, fail_never=True, fail_after=True)
+        config.set_fail_mode(fail_fast=True, fail_never=True, fail_mode="fail_never")
         assert config.fail_mode == FailModeEnum.FAIL_FAST
 
     def test_set_output_format(self):
@@ -55,19 +55,21 @@ class TestSettingConfig:
 
     def test_set_output_level(self):
         config = Config()
-        config.set_output_level(quiet=True)
-        assert config.output_level == OutputLevelEnum.QUIET
-
-        config.set_output_level(verbose=True)
+        config.set_output_level(output_level="verbose")
         assert config.output_level == OutputLevelEnum.VERBOSE
 
-        config.set_output_level(silent=True)
+        config.set_output_level(output_level_verbose=True)
+        assert config.output_level == OutputLevelEnum.VERBOSE
+
+        config.set_output_level(output_level_silent=True)
         assert config.output_level == OutputLevelEnum.SILENT
 
-        config.set_output_level(quiet=True, verbose=True)
+        config.set_output_level(output_level="silent", output_level_verbose=True)
         assert config.output_level == OutputLevelEnum.VERBOSE
 
-        config.set_output_level(quiet=True, verbose=True, silent=True)
+        config.set_output_level(
+            output_level="verbose", output_level_verbose=True, output_level_silent=True
+        )
         assert config.output_level == OutputLevelEnum.SILENT
 
     def test_reset(self):

@@ -7,6 +7,7 @@ import pytest
 from click.testing import CliRunner
 
 from py_schemax.cli import validate
+from py_schemax.config import DEFAULT_CONFIG_FILES
 
 _VALID_FILE_COUNT = 2
 _INVALID_FILE_COUNT = 8
@@ -271,7 +272,7 @@ class TestOutputLevels:
         args = [
             str(path)
             for path in list(valid_schemas.values()) + list(invalid_schemas.values())
-        ] + ["--quiet"]
+        ] + ["--output-level", "quiet"]
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format)
         )
@@ -336,7 +337,7 @@ class TestFailModes:
         args = [
             str(path)
             for path in list(valid_schemas.values()) + list(invalid_schemas.values())
-        ] + ["--fail-after", "--verbose"]
+        ] + ["--fail-mode", "fail_after", "--verbose"]
 
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format)
@@ -404,7 +405,7 @@ class TestOverrides:
         args = [
             str(path)
             for path in list(valid_schemas.values()) + list(invalid_schemas.values())
-        ] + ["--silent", "--verbose", "--quiet"]
+        ] + ["--silent", "--verbose", "--output-level", "quiet"]
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format)
         )
@@ -427,11 +428,10 @@ class TestOverrides:
         args = [
             str(path)
             for path in list(valid_schemas.values()) + list(invalid_schemas.values())
-        ] + ["--verbose", "--quiet"]
+        ] + ["--verbose", "--output-level", "quiet"]
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format)
         )
-
         _validate_stdout(
             result,
             output_format=output_format,
@@ -450,7 +450,7 @@ class TestOverrides:
         args = [
             str(path)
             for path in list(valid_schemas.values()) + list(invalid_schemas.values())
-        ] + ["--fail-fast", "--fail-never", "--fail-after", "--verbose"]
+        ] + ["--fail-fast", "--fail-never", "--fail-mode", "fail_after", "--verbose"]
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format)
         )
@@ -473,11 +473,10 @@ class TestOverrides:
         args = [
             str(path)
             for path in list(valid_schemas.values()) + list(invalid_schemas.values())
-        ] + ["--fail-never", "--fail-after", "--verbose"]
+        ] + ["--fail-never", "--fail-mode", "fail_after", "--verbose"]
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format)
         )
-
         _validate_stdout(
             result,
             output_format=output_format,
@@ -579,14 +578,45 @@ class TestEnvVariables:
 
 
 class TestConfigFile:
-    def test_default_config_file_accepted(self, valid_schemas):
+    @pytest.mark.parametrize("input_file", DEFAULT_CONFIG_FILES)
+    def test_default_config_file_accepted(self, input_file):
         runner = CliRunner()
         with runner.isolated_filesystem():
-            with open("schemax.ini", "w") as f:
+            with open(input_file, "w") as f:
                 f.write("[schemax.validate]\n")
-                f.write("output_format = json\n")
-                f.write("output_level_verbose = true\n")
-                f.write("fail_never = true\n")
+                f.write('output_format = "json"\n')
+                f.write('output_level_verbose = "true"\n')
+                f.write('fail_never = "true"\n')
+
+            with open("valid_schema.json", "w") as f:
+                json.dump(
+                    {
+                        "name": "ValidSchema",
+                        "fqn": "com.example.ValidSchema",
+                        "columns": [],
+                    },
+                    f,
+                )
+
+            result = runner.invoke(
+                validate,
+                [str("valid_schema.json")],
+            )
+            _validate_json_stdout(
+                result,
+                expected_exit_code=0,
+                expected_ok_count=1,
+                expected_error_count=0,
+            )
+
+    def test_default_config_file_accepted_pytoml(self):
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open("pyproject.toml", "w") as f:
+                f.write("[tool.schemax.validate]\n")
+                f.write('output_format = "json"\n')
+                f.write('output_level_verbose = "true"\n')
+                f.write('fail_never = "true"\n')
 
             with open("valid_schema.json", "w") as f:
                 json.dump(
@@ -610,7 +640,7 @@ class TestConfigFile:
             )
 
     def test_config_file_is_accepted_text_verbose(self, valid_schemas):
-        _, temp_file_path = tempfile.mkstemp(prefix="sample_config.ini")
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.ini")
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
             f.write("output_format = text\n")
@@ -631,7 +661,7 @@ class TestConfigFile:
         )
 
     def test_config_file_is_accepted_text_silent(self, invalid_schemas):
-        _, temp_file_path = tempfile.mkstemp(prefix="sample_config.ini")
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.ini")
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
             f.write("output_format = text\n")
@@ -652,11 +682,11 @@ class TestConfigFile:
         )
 
     def test_config_file_is_accepted_json_failnever(self, invalid_schemas):
-        _, temp_file_path = tempfile.mkstemp(prefix="sample_config.ini")
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
-            f.write("output_format = json\n")
-            f.write("fail_never = true\n")
+            f.write('output_format = "json"\n')
+            f.write('fail_never = "true"\n')
 
         runner = CliRunner()
         args = [str(path) for path in invalid_schemas.values()] + [
@@ -672,11 +702,11 @@ class TestConfigFile:
         )
 
     def test_config_file_is_accepted_json_failfast(self, invalid_schemas):
-        _, temp_file_path = tempfile.mkstemp(prefix="sample_config.ini")
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
-            f.write("output_format = json\n")
-            f.write("fail_fast = true\n")
+            f.write('output_format = "json"\n')
+            f.write('fail_fast = "true"\n')
 
         runner = CliRunner()
         args = [str(path) for path in invalid_schemas.values()] + [
@@ -702,10 +732,10 @@ class TestInvalidConfigFile:
         ]
         result = runner.invoke(validate, args)
         assert result.exit_code == 2
-        assert f"Config file '{temp_file_path}' not found" in result.stderr
+        assert f"none of the provided config files are valid" in result.stderr
 
     def test_wo_validation_section(self, valid_schemas):
-        _, temp_file_path = tempfile.mkstemp(prefix="sample_config.ini")
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.ini")
         with open(temp_file_path, "w") as f:
             f.write("[schemax.other]\n")
             f.write("output_format = json\n")
@@ -716,7 +746,91 @@ class TestInvalidConfigFile:
             temp_file_path,
         ]
         result = runner.invoke(validate, args)
+        assert result.exit_code == 2
+        assert f"none of the provided config files are valid" in result.stderr
+
+    def test_invalid_ini_file(self, valid_schemas):
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.ini")
+        with open(temp_file_path, "w") as f:
+            f.write("[schemax.validate]\n")
+            f.write("invalid_line\n")
+
+        runner = CliRunner()
+        args = [str(path) for path in valid_schemas.values()] + [
+            "--config",
+            temp_file_path,
+        ]
+        result = runner.invoke(validate, args)
+        assert result.exit_code == 2
+        assert f"none of the provided config files are valid" in result.stderr
+
+    def test_invalid_toml_file(self, valid_schemas):
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
+        with open(temp_file_path, "w") as f:
+            f.write("[schemax.validate]\n")
+            f.write("invalid_line\n")
+
+        runner = CliRunner()
+        args = [str(path) for path in valid_schemas.values()] + [
+            "--config",
+            temp_file_path,
+        ]
+        result = runner.invoke(validate, args)
+        assert result.exit_code == 2
+
+
+class TestConfigOverrides:
+    def test_override_env_over_file(self, invalid_schemas):
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.ini")
+        with open(temp_file_path, "w") as f:
+            f.write("[schemax.validate]\n")
+            f.write("output_format = json\n")
+            f.write("output_level = silent\n")
+            f.write("fail_mode = fail_never\n")
+
+        runner = CliRunner()
+        args = [str(path) for path in invalid_schemas.values()] + [
+            "--config",
+            temp_file_path,
+        ]
+        result = runner.invoke(
+            validate,
+            args,
+            env={
+                "SCHEMAX_VALIDATE_OUTPUT_FORMAT": "text",
+                "SCHEMAX_VALIDATE_OUTPUT_LEVEL": "verbose",
+                "SCHEMAX_VALIDATE_FAIL_MODE": "fail_fast",
+            },
+        )
+
         _validate_text_stdout(
+            result,
+            expected_exit_code=1,
+            expected_ok_count=0,
+            expected_error_count=1,
+        )
+
+    def test_override_options_over_env(self, valid_schemas):
+        runner = CliRunner()
+        args = [str(path) for path in valid_schemas.values()] + [
+            "--out",
+            "json",
+            "--output-level",
+            "silent",
+            "--fail-mode",
+            "fail_never",
+        ]
+        result = runner.invoke(
+            validate,
+            args,
+            env={
+                "SCHEMAX_VALIDATE_OUTPUT_FORMAT": "text",
+                "SCHEMAX_VALIDATE_OUTPUT_LEVEL": "verbose",
+                "SCHEMAX_VALIDATE_FAIL_MODE": "fail_fast",
+            },
+        )
+
+        _validate_json_stdout(
             result,
             expected_exit_code=0,
             expected_ok_count=0,

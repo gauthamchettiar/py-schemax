@@ -3,7 +3,7 @@
 import nox
 
 # Python versions to test against
-PYTHON_VERSIONS = ["3.10", "3.11", "3.12", "3.13"]
+PYTHON_VERSIONS = ["3.11", "3.12", "3.13"]
 
 # Configure nox to use uv by default
 nox.options.default_venv_backend = "uv"

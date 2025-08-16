@@ -7,44 +7,36 @@ from typing import Any, Callable, List, MutableMapping
 import click
 
 from py_schemax import __version__
-from py_schemax.config import Config, OutputFormatEnum
+from py_schemax.config import (
+    DEFAULT_CONFIG_FILES,
+    Config,
+    FailModeEnum,
+    OutputFormatEnum,
+    OutputLevelEnum,
+    parse_config_files,
+)
 from py_schemax.output import Output
 from py_schemax.utils import accept_file_paths_as_stdin
 from py_schemax.validator import validate_file
 
 
-def parse_config_file_for(
+def parse_config_files_for(
     section_name: str,
-) -> Callable[[click.Context, click.Parameter, str], None]:
+) -> Callable[[click.Context, click.Parameter, List[str]], None]:
     """Parse the config file for a specific command."""
-    section_name = f"schemax.{section_name}"
 
-    def _parse(ctx: click.Context, param: click.Parameter, filename: str) -> None:
-        """Load configuration from file into Click's default_map."""
-        if not filename:
-            return  # pragma: no cover
-        if not os.path.exists(filename):
-            if filename == "schemax.ini":
-                return
-            raise click.BadParameter(f"Config file '{filename}' not found")
+    def _parse(
+        ctx: click.Context, param: click.Parameter, file_paths: List[str]
+    ) -> None:
+        default_map: MutableMapping[str, Any] = ctx.default_map or {}
+        from_file_path, parsed_config = parse_config_files(file_paths, section_name)
 
-        cfg = ConfigParser()
-        cfg.read(filename)
-
-        defaults: MutableMapping[str, Any] = ctx.default_map or {}
-
-        if section_name not in cfg:
-            return
-
-        # Initialize ctx.default_map if it was None
-        if ctx.default_map is None:
-            ctx.default_map = defaults
-
-        # Add each config option as a default
-        for config in cfg[section_name]:
-            defaults.setdefault(config, {})
-
-        defaults.update(cfg[section_name])
+        default_map.update(parsed_config)
+        if not default_map and list(file_paths) != list(DEFAULT_CONFIG_FILES):
+            raise click.BadParameter(
+                f"none of the provided config files are valid - {file_paths}"
+            )
+        ctx.default_map = default_map
 
     return _parse
 
@@ -65,8 +57,9 @@ def main() -> None:
     "-c",
     "--config",
     type=click.Path(dir_okay=False),
-    default="schemax.ini",
-    callback=parse_config_file_for("validate"),
+    default=DEFAULT_CONFIG_FILES,
+    multiple=True,
+    callback=parse_config_files_for("validate"),
     is_eager=True,
     expose_value=False,
     help="Read option defaults from the specified INI file",
@@ -77,7 +70,6 @@ def main() -> None:
     "--out",
     "output_format",
     type=click.Choice([e.value for e in OutputFormatEnum]),
-    default=OutputFormatEnum.TEXT.value,
     help="Output format for validation results",
     envvar="SCHEMAX_VALIDATE_OUTPUT_FORMAT",
 )
@@ -89,11 +81,11 @@ def main() -> None:
     envvar="SCHEMAX_VALIDATE_USE_JSON",
 )
 @click.option(
-    "--quiet",
-    "output_level_quiet",
-    is_flag=True,
-    help="Suppress all output except errors",
-    envvar="SCHEMAX_VALIDATE_QUIET",
+    "--output-level",
+    "output_level",
+    type=click.Choice([e.value for e in OutputLevelEnum]),
+    help="Output level for validation results",
+    envvar="SCHEMAX_VALIDATE_OUTPUT_LEVEL",
 )
 @click.option(
     "--verbose",
@@ -110,10 +102,10 @@ def main() -> None:
     envvar="SCHEMAX_VALIDATE_SILENT",
 )
 @click.option(
-    "--fail-after",
-    is_flag=True,
-    help="Exit with error code if any files are invalid at the end",
-    envvar="SCHEMAX_VALIDATE_FAIL_AFTER",
+    "--fail-mode",
+    type=click.Choice([e.value for e in FailModeEnum]),
+    help="Failure mode for validation",
+    envvar="SCHEMAX_VALIDATE_FAIL_MODE",
 )
 @click.option(
     "--fail-never",
@@ -127,32 +119,33 @@ def main() -> None:
     help="Stop on first validation error, overrides --fail-never and --fail-after",
     envvar="SCHEMAX_VALIDATE_FAIL_FAST",
 )
+@click.pass_context
 def validate(
+    ctx: click.Context,
     file_paths: List[str],
     output_format: str,
     use_json: bool,
-    output_level_quiet: bool,
+    output_level: str,
     output_level_verbose: bool,
     output_level_silent: bool,
+    fail_mode: str,
     fail_fast: bool,
     fail_never: bool,
-    fail_after: bool,
 ) -> None:
     """Validate a file against the Defined Schema.
 
     FILE_PATHS: One or More Paths to JSON or YAML file to validate.
     """
     file_paths = accept_file_paths_as_stdin(file_paths)
-
     config = Config()
     config.set_output_format(output_format=output_format, use_json=use_json)
     config.set_output_level(
-        quiet=output_level_quiet,
-        verbose=output_level_verbose,
-        silent=output_level_silent,
+        output_level=output_level,
+        output_level_verbose=output_level_verbose,
+        output_level_silent=output_level_silent,
     )
     config.set_fail_mode(
-        fail_fast=fail_fast, fail_never=fail_never, fail_after=fail_after
+        fail_mode=fail_mode, fail_fast=fail_fast, fail_never=fail_never
     )
 
     output = Output(config=config)
