@@ -7,7 +7,7 @@ name = "py-schemax"
 version = "0.0.1"
 description = "A CLI tool built with Click"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "click>=8.2.1",
     "pydantic>=2.11.7",
