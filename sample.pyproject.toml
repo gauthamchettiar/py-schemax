@@ -1,0 +1,18 @@
+# Sample pyproject.toml configuration for py-schemax
+# Add this section to your existing pyproject.toml file
+
+[tool.schemax.validate]
+# Output format: json or text
+output_format = "json"
+
+# Output level: silent, quiet, or verbose
+# - silent: no output, only exit codes
+# - quiet: only errors and summary (default)
+# - verbose: detailed progress including successful validations
+output_level = "verbose"
+
+# Failure mode: fast, never, or after
+# - fast: stop on first validation error
+# - never: never exit with error code (useful for CI/CD)
+# - after: validate all files then exit with error if any failed (default)
+fail_mode = "after"

@@ -163,11 +163,15 @@ Pre-push hooks run on every push:
 ### Core Flow
 
 1. **CLI Entry** (`py_schemax/cli.py`) - Click-based CLI with `schemax validate` command
-2. **Validation** (`py_schemax/validator.py`) - Core validation logic
-3. **Schema Models** (`py_schemax/schema/dataset.py`) - Pydantic models defining schema structure
-4. **Output Control** (`py_schemax/output.py`) - Manages output formats and verbosity
+2. **Configuration** (`py_schemax/config.py`) - Configuration management with precedence
+3. **Validation** (`py_schemax/validator.py`) - Core validation logic
+4. **Schema Models** (`py_schemax/schema/dataset.py`) - Pydantic models defining schema structure
+5. **Output Control** (`py_schemax/output.py`) - Manages output formats and verbosity
 
 **Key Points**:
+- Configuration precedence: CLI flags > environment variables > config files > defaults
+- Supported config files: `schemax.ini`, `schemax.toml`, `pyproject.toml`
+- Environment variables use `SCHEMAX_VALIDATE_*` prefix
 - Validation logic handles JSON and YAML files
 - File validation includes graceful error handling
 - Always validate against Pydantic schema models

@@ -39,15 +39,37 @@ py_schemax/
 - **Key Functions**:
   - `main()`: Click group with version option
   - `validate()`: Main validation command with extensive CLI options
+  - `parse_config_files_for()`: Configuration file parsing callback
 - **CLI Options**:
   - Output control: `--out`, `--json`, `--quiet`, `--verbose`, `--silent`
   - Failure modes: `--fail-fast`, `--fail-never`, `--fail-after`
-- **Flow**: Accepts file paths → creates OutputControl → validates files → handles output
+  - Configuration: `--config` flag for custom config files
+- **Configuration Support**:
+  - Default config files: `schemax.ini`, `schemax.toml`, `pyproject.toml`
+  - Environment variables: `SCHEMAX_VALIDATE_*` prefix
+  - Precedence: CLI flags > env vars > config files > defaults
+- **Flow**: Accepts file paths → parses config → creates Config → validates files → handles output
+
+#### 1a. Configuration Management (`config.py`)
+- **Purpose**: Centralized configuration handling with multiple sources
+- **Key Functions**:
+  - `parse_config_files()`: Parse INI/TOML config files
+  - `parse_ini_config_file()`: INI format parser
+  - `parse_toml_config_file()`: TOML format parser
+- **Key Classes**:
+  - `Config`: Main configuration manager
+  - `DefaultConfig`: Default values
+  - Enums: `OutputFormatEnum`, `OutputLevelEnum`, `FailModeEnum`
+- **Configuration Sources** (in precedence order):
+  1. CLI flags (highest)
+  2. Environment variables (`SCHEMAX_VALIDATE_*`)
+  3. Config files (`schemax.ini`, `schemax.toml`, `pyproject.toml`)
+  4. Built-in defaults (lowest)
 
 #### 2. Core Validation (`validator.py`)
 - **Purpose**: Main validation engine
 - **Key Functions**:
-  - `validate()`: Core Pydantic validation logic
+  - `validate_file()`: File validation entry point accepting Config
   - `_format_loc_as_jsonql()`: Converts Pydantic error locations to JSONPath format
   - `_format_pydantic_error_as_text()`: Human-readable error message generation
 - **Error Handling**: Structured error output with JSONPath-style locations
@@ -55,10 +77,7 @@ py_schemax/
 #### 3. Output Control (`output.py`)
 - **Purpose**: Centralized output formatting and control
 - **Key Classes**:
-  - `OutputControl`: Main controller with enums for format/level/fail modes
-  - `OutputFormatEnum`: JSON vs TEXT output formats
-  - `OutputLevelEnum`: SILENT/QUIET/VERBOSE levels
-  - `FailModeEnum`: FAIL_FAST/FAIL_NEVER/FAIL_AFTER modes
+  - `Output`: Main output controller accepting Config object
 - **Output Formats**:
   - Text: Emoji-based (✅❌) with colored output via click.secho
   - JSON: Structured ValidationOutputSchema format
@@ -92,6 +111,12 @@ py_schemax/
   - `accept_file_paths_as_stdin()`: Handle file paths from stdin for pipe operations
 
 ### Key Design Patterns
+
+#### Configuration Precedence Pattern
+- **CLI flags** (highest precedence) > **Environment variables** > **Config files** > **Built-in defaults** (lowest)
+- Environment variables use `SCHEMAX_VALIDATE_*` prefix
+- Config files support both INI and TOML formats with multiple search locations
+- Configuration is centralized in `Config` class with clear setter methods
 
 #### Discriminated Union Schema Pattern
 ```python
