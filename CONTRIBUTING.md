@@ -1,104 +1,43 @@
 # Contributing to py-schemax
 
-Thank you for your interest in contributing to py-schemax! This document provides comprehensive instructions for setting up your development environment and contributing to the project.
+Thank you for contributing! This guide covers setup, development workflow, and project guidelines.
 
-## Table of Contents
+## Quick Start
 
-- [Project Overview](#project-overview)
-- [Development Setup](#development-setup)
-- [Development Workflow](#development-workflow)
-- [Testing](#testing)
-- [Code Quality](#code-quality)
-- [Architecture Guidelines](#architecture-guidelines)
-- [Git Workflow](#git-workflow)
-- [Release Process](#release-process)
+**Prerequisites**: Python 3.10+ and [uv](https://github.com/astral-sh/uv)
 
-## Project Overview
+```bash
+git clone https://github.com/gauthamchettiar/py-schemax.git
+cd py-schemax
+uv venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
+uv sync --group dev
+uv run pre-commit install && uv run pre-commit install --hook-type pre-push
+uv run schemax --help  # Verify installation
+```
 
-py-schemax is a CLI tool for validating data schema definitions (JSON/YAML) against Pydantic models. It features:
+## Technologies
 
-- Comprehensive CLI options for different output formats
-- Support for Python 3.10+ across multiple versions
-- Comprehensive test suite with 80% minimum coverage requirement
-
-### Key Technologies
-
-- **Build System**: uv (fast Python package manager) + hatchling
-- **Testing**: pytest with nox for multi-version testing
-- **Code Quality**: black, isort, ruff, mypy, bandit, safety
-- **CLI**: Click framework
-
-## Development Setup
-
-### Prerequisites
-
-- Python 3.10 or higher
-- [uv](https://github.com/astral-sh/uv) package manager
-
-### Initial Setup
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/gauthamchettiar/py-schemax.git
-   cd py-schemax
-   ```
-
-2. **Create and activate a virtual environment**:
-   ```bash
-   uv venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-3. **Install the project in development mode**:
-   ```bash
-   uv sync --group dev
-   ```
-
-4. **Set up pre-commit hooks**:
-   ```bash
-   uv run pre-commit install
-   uv run pre-commit install --hook-type pre-push
-   ```
-
-5. **Verify installation**:
-   ```bash
-   uv run schemax --help
-   ```
+- **Build**: uv + hatchling | **Testing**: pytest + nox | **Quality**: black, isort, ruff, mypy, bandit, safety | **CLI**: Click
 
 ## Development Workflow
 
-### Daily Development
+```bash
+# Test frequently
+uv run pytest              # Quick test (current Python)
+uv run nox                 # Full test suite (all Python versions)
 
-1. **Run tests (frequently)**:
-   ```bash
-   # Quick test run (current Python version)
-   uv run pytest
+# Before committing
+uv run nox -s format       # Auto-format code
+uv run nox -s lint         # Quality checks
+uv run nox -s security     # Security scans
+```
 
-   # Full test suite (all Python versions)
-   uv run nox
-   ```
+## Testing & Quality
 
-2. **Check code quality (before commit)**:
-   ```bash
-   # Auto-format code
-   uv run nox -s format
-
-   # Run all quality checks
-   uv run nox -s lint
-   ```
-
-## Testing
-
-### Test Structure
-
-- **Test Location**: `tests/` directory
-- **Fixtures**: `tests/fixtures/{valid_schemas,invalid_schemas}/` for test data
-- **Coverage**: Minimum 80% required (try to keep it at 100%)
-- **Multi-version**: Tests run on Python 3.10, 3.11, 3.12, and 3.13
-
-### CLI Testing Pattern
-
-Use Click's CliRunner for command testing:
+- **Tests**: `tests/` directory with fixtures in `tests/fixtures/{valid_schemas,invalid_schemas}/`
+- **Coverage**: 80% minimum (aim for 100%)
+- **Multi-version**: Python 3.10-3.13 via nox
+- **CLI Testing**: Use Click's CliRunner
 
 ```python
 from click.testing import CliRunner
@@ -111,52 +50,9 @@ def test_cli_command():
     assert "✅" in result.output
 ```
 
-### Test Fixtures
-
-- Use existing fixtures in `tests/fixtures/` for consistent test data
-- Create new fixtures following the existing pattern:
-  - `valid_schemas/` - Schemas that should pass validation
-  - `invalid_schemas/` - Schemas that should fail validation
-
-## Code Quality
-
-### Automated Tools
-
-All code quality tools are configured in `pyproject.toml` and run via nox:
-
-```bash
-# Run all quality checks
-uv run nox -s lint
-
-# Auto-format code
-uv run nox -s format
-
-# Security scanning
-uv run nox -s security
-```
-
-### Tool Configuration
-
-- **Black**: Code formatting (88 character line length)
-- **isort**: Import sorting (black profile)
-- **Ruff**: Fast linting and additional formatting
-- **MyPy**: Static type checking with strict settings
-- **Bandit**: Security vulnerability scanning
-- **Safety/pip-audit**: Dependency vulnerability scanning (with fallback)
-
-### Pre-commit Hooks
-
-Pre-commit hooks automatically run on every commit:
-
-- Code formatting (black, isort, ruff)
-- Type checking (mypy)
-- Basic file checks (trailing whitespace, yaml/json syntax)
-- Minimal test suite (Python 3.13 only, fast)
-
-Pre-push hooks run on every push:
-
-- Full test suite across all Python versions
-- Security scans (bandit + safety)
+**Quality Tools** (configured in `pyproject.toml`):
+- **Black**: 88-char line length | **isort**: black profile | **Ruff**: fast linting
+- **MyPy**: strict type checking | **Bandit/Safety**: security scanning
 
 ## Architecture Guidelines
 
