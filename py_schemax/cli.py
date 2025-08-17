@@ -16,8 +16,8 @@ from py_schemax.config import (
     parse_config_files,
 )
 from py_schemax.output import Output
+from py_schemax.rulesets import validate_file_by_ruleset
 from py_schemax.utils import accept_file_paths_as_stdin
-from py_schemax.validator import validate_file
 
 IGNORE_KEYS_FROM_CONFIG = [
     "use_json",  # set using output_format
@@ -215,7 +215,7 @@ def validate(
     output = Output(config=config)
 
     for path in file_paths:
-        validation_output = validate_file(config, path)
+        validation_output = validate_file_by_ruleset(config, path)
         output.print_validation_output(validation_output)
 
     output.end_control()

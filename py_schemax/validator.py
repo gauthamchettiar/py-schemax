@@ -25,7 +25,7 @@ class Validator(ABC):
 
     @property
     @abstractmethod
-    def validated_content(self) -> Any:  # pragma: no cover
+    def validated_content(self) -> dict | None:  # pragma: no cover
         pass
 
 
@@ -102,11 +102,12 @@ class FileValidator(Validator):
 class PydanticSchemaValidator(Validator):
     def __init__(self, config: Config):
         self.config: Config = config
-        self.__validated_content: DatasetSchema | None = None
+        self.__validated_content: dict | None = None
 
     def validate(self, data: dict) -> ValidationOutputSchema:
         try:
-            self.__validated_content = DatasetSchema.model_validate(data)
+            DatasetSchema.model_validate(data)
+            self.__validated_content = data
         except ValidationError as e:
             return {
                 "file_path": "",
@@ -182,26 +183,6 @@ class PydanticSchemaValidator(Validator):
         return error_string
 
     @property
-    def validated_content(self) -> DatasetSchema | None:
+    def validated_content(self) -> dict | None:
         """Return the validated content of the file."""
         return self.__validated_content
-
-
-def validate_file(config: Config, file_path: str | Path) -> ValidationOutputSchema:
-    """Validate a file using the appropriate validator based on its extension."""
-
-    file_validator = FileValidator(config)
-    if (file_validator_output := file_validator.validate(file_path))["valid"] is False:
-        return file_validator_output
-    else:
-        pydantic_validator = PydanticSchemaValidator(config)
-        if (
-            pydantic_validator_output := pydantic_validator.validate(
-                file_validator.validated_content or {}
-            )
-        )["valid"] is False:
-            return merge_validation_outputs(
-                file_validator_output, pydantic_validator_output
-            )
-
-    return file_validator_output
