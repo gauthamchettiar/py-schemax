@@ -19,9 +19,9 @@ class OutputLevelEnum(Enum):
 
 
 class FailModeEnum(Enum):
-    FAIL_FAST = "fail_fast"
-    FAIL_NEVER = "fail_never"
-    FAIL_AFTER = "fail_after"
+    FAST = "fast"
+    NEVER = "never"
+    AFTER = "after"
 
 
 DEFAULT_CONFIG_FILES = ["schemax.ini", "schemax.toml", "pyproject.toml"]
@@ -32,7 +32,7 @@ class DefaultConfig:
 
     output_format = OutputFormatEnum.TEXT
     output_level = OutputLevelEnum.QUIET
-    fail_mode = FailModeEnum.FAIL_AFTER
+    fail_mode = FailModeEnum.AFTER
 
 
 class Config:
@@ -84,9 +84,9 @@ class Config:
     ) -> None:
         """Set the failure mode based on CLI flags."""
         if fail_fast:
-            self.__fail_mode = FailModeEnum.FAIL_FAST
+            self.__fail_mode = FailModeEnum.FAST
         elif fail_never:
-            self.__fail_mode = FailModeEnum.FAIL_NEVER
+            self.__fail_mode = FailModeEnum.NEVER
         elif fail_mode:
             self.__fail_mode = FailModeEnum(fail_mode)
         else:
@@ -123,7 +123,10 @@ def parse_config_files(
                 str_file_path, f"schemax.{section_name}"
             ) or parse_toml_config_file(str_file_path, f"tool.schemax.{section_name}")
         if parsed_configs:
-            parsed_configs = {k: v.strip('"') for k, v in parsed_configs.items()}
+            parsed_configs = {
+                k: v.strip('"') if isinstance(v, str) else v
+                for k, v in parsed_configs.items()
+            }
             return str_file_path, parsed_configs
 
     return "", parsed_configs

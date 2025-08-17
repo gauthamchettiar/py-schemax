@@ -5,14 +5,14 @@ from py_schemax.summary import Summary
 class TestDefaultConfig:
     def test_default_values(self):
         config = Config()
-        assert config.fail_mode == FailModeEnum.FAIL_AFTER
+        assert config.fail_mode == FailModeEnum.AFTER
         assert config.output_format == OutputFormatEnum.TEXT
         assert config.output_level == OutputLevelEnum.QUIET
 
     def test_default_set_modes(self):
         config = Config()
         config.set_fail_mode()
-        assert config.fail_mode == FailModeEnum.FAIL_AFTER
+        assert config.fail_mode == FailModeEnum.AFTER
 
         config.set_output_format()
         assert config.output_format == OutputFormatEnum.TEXT
@@ -24,20 +24,20 @@ class TestDefaultConfig:
 class TestSettingConfig:
     def test_set_fail_mode(self):
         config = Config()
-        config.set_fail_mode(fail_mode="fail_fast")
-        assert config.fail_mode == FailModeEnum.FAIL_FAST
+        config.set_fail_mode(fail_mode="fast")
+        assert config.fail_mode == FailModeEnum.FAST
 
         config.set_fail_mode(fail_fast=True)
-        assert config.fail_mode == FailModeEnum.FAIL_FAST
+        assert config.fail_mode == FailModeEnum.FAST
 
         config.set_fail_mode(fail_never=True)
-        assert config.fail_mode == FailModeEnum.FAIL_NEVER
+        assert config.fail_mode == FailModeEnum.NEVER
 
         config.set_fail_mode(fail_fast=True, fail_never=True)
-        assert config.fail_mode == FailModeEnum.FAIL_FAST
+        assert config.fail_mode == FailModeEnum.FAST
 
-        config.set_fail_mode(fail_fast=True, fail_never=True, fail_mode="fail_never")
-        assert config.fail_mode == FailModeEnum.FAIL_FAST
+        config.set_fail_mode(fail_fast=True, fail_never=True, fail_mode="never")
+        assert config.fail_mode == FailModeEnum.FAST
 
     def test_set_output_format(self):
         config = Config()
@@ -75,7 +75,7 @@ class TestSettingConfig:
     def test_reset(self):
         config = Config()
         config.reset()
-        assert config.fail_mode == FailModeEnum.FAIL_AFTER
+        assert config.fail_mode == FailModeEnum.AFTER
         assert config.output_format == OutputFormatEnum.TEXT
         assert config.output_level == OutputLevelEnum.QUIET
 

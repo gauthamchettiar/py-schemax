@@ -19,6 +19,14 @@ from py_schemax.output import Output
 from py_schemax.utils import accept_file_paths_as_stdin
 from py_schemax.validator import validate_file
 
+IGNORE_KEYS_FROM_CONFIG = [
+    "use_json",  # set using output_format
+    "output_level_verbose",  # set using output_level
+    "output_level_silent",  # set using output_level
+    "fail_fast",  # set using fail_mode
+    "fail_never",  # set using fail_mode
+]
+
 
 def parse_config_files_for(
     section_name: str,
@@ -36,6 +44,9 @@ def parse_config_files_for(
             raise click.BadParameter(
                 f"none of the provided config files are valid - {file_paths}"
             )
+        default_map = {
+            k: v for k, v in default_map.items() if k not in IGNORE_KEYS_FROM_CONFIG
+        }
         ctx.default_map = default_map
 
     return _parse
@@ -46,7 +57,18 @@ def parse_config_files_for(
 def main() -> None:
     """A powerful CLI tool for validating, managing, and maintaining data schema definitions using Pydantic models.
 
-    Use --help to see available commands.
+    py-schemax helps ensure your data schema files (JSON/YAML) conform to a standardized
+    structure with comprehensive validation rules. It provides clear, structured error
+    reporting and flexible output options for seamless integration with CI/CD workflows.
+
+    \b
+    Examples:
+      schemax validate schema.json                    # Validate single file
+      schemax validate *.json *.yaml                  # Validate multiple files
+      find . -name "*.json" | schemax validate        # Validate from pipe
+      schemax validate --json --verbose schemas/      # JSON output with details
+
+    Use 'schemax COMMAND --help' for more information on a command.
     """
     pass  # pragma: no cover
 
@@ -54,7 +76,6 @@ def main() -> None:
 @main.command()
 @click.argument("file_paths", nargs=-1, type=click.Path())
 @click.option(
-    "-c",
     "--config",
     type=click.Path(dir_okay=False),
     default=DEFAULT_CONFIG_FILES,
@@ -62,11 +83,10 @@ def main() -> None:
     callback=parse_config_files_for("validate"),
     is_eager=True,
     expose_value=False,
-    help="Read option defaults from the specified INI file",
+    help="Read option defaults from the specified INI/TOML file.",
     show_default=True,
 )
 @click.option(
-    "-o",
     "--out",
     "output_format",
     type=click.Choice([e.value for e in OutputFormatEnum]),
@@ -78,7 +98,6 @@ def main() -> None:
     "use_json",
     is_flag=True,
     help="Output results in JSON format, overrides --out option",
-    envvar="SCHEMAX_VALIDATE_USE_JSON",
 )
 @click.option(
     "--output-level",
@@ -92,32 +111,31 @@ def main() -> None:
     "output_level_verbose",
     is_flag=True,
     help="Show detailed validation progress with ok and errors, overrides --quiet",
-    envvar="SCHEMAX_VALIDATE_VERBOSE",
 )
 @click.option(
     "--silent",
     "output_level_silent",
     is_flag=True,
     help="Suppress all output, only exit with error codes, overrides --quiet and --verbose",
-    envvar="SCHEMAX_VALIDATE_SILENT",
 )
 @click.option(
     "--fail-mode",
+    "fail_mode",
     type=click.Choice([e.value for e in FailModeEnum]),
     help="Failure mode for validation",
     envvar="SCHEMAX_VALIDATE_FAIL_MODE",
 )
 @click.option(
     "--fail-never",
+    "fail_never",
     is_flag=True,
     help="Never exit with error code, useful for CI, overrides --fail-fast",
-    envvar="SCHEMAX_VALIDATE_FAIL_NEVER",
 )
 @click.option(
     "--fail-fast",
+    "fail_fast",
     is_flag=True,
     help="Stop on first validation error, overrides --fail-never and --fail-after",
-    envvar="SCHEMAX_VALIDATE_FAIL_FAST",
 )
 @click.pass_context
 def validate(
@@ -132,9 +150,55 @@ def validate(
     fail_fast: bool,
     fail_never: bool,
 ) -> None:
-    """Validate a file against the Defined Schema.
+    """Validate schema files against the defined Pydantic data model structure.
 
-    FILE_PATHS: One or More Paths to JSON or YAML file to validate.
+    This command validates JSON and YAML schema files to ensure they conform to the
+    standardized structure with proper data types, constraints, and required fields.
+    Supports validating single files, multiple files, or files from stdin (pipe).
+
+    \b
+    FILE_PATHS: One or more paths to JSON (.json) or YAML (.yaml/.yml) schema files.
+                If no paths provided, will read file paths from stdin (useful with pipes).
+
+    \b
+    Examples:
+      # Validate single file
+      schemax validate user_schema.json
+
+      # Validate multiple files with detailed output
+      schemax validate --verbose schema1.json schema2.yaml
+
+      # Get JSON output for programmatic processing
+      schemax validate --json *.json
+
+      # Stop on first error (useful for debugging)
+      schemax validate --fail-fast schemas/*.yaml
+
+      # Validate all files but never exit with error code (CI/CD friendly)
+      schemax validate --fail-never --json schemas/
+
+      # Validate files from pipe (directory listing)
+      find schemas/ -name "*.json" | schemax validate --verbose
+
+      # Silent validation (only exit codes, no output)
+      schemax validate --silent schema.json && echo "All valid!"
+
+    \b
+    Exit Codes:
+      0    All files are valid (or --fail-never used)
+      1    One or more files failed validation
+      2    Command error (invalid arguments, file not found, etc.)
+
+    \b
+    Output Formats:
+      Text (default): Human-readable with emojis (✅ success, ❌ error) and colors
+      JSON:           Structured data with detailed error information and locations
+
+    \b
+    Environment Variables:
+      SCHEMAX_VALIDATE_OUTPUT_FORMAT    Set default output format (json|text)
+      SCHEMAX_VALIDATE_OUTPUT_LEVEL     Set default verbosity (silent|quiet|verbose)
+      SCHEMAX_VALIDATE_FAIL_MODE        Set default failure mode (fail_fast|fail_never|fail_after)
     """
     file_paths = accept_file_paths_as_stdin(file_paths)
     config = Config()

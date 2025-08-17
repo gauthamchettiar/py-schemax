@@ -337,7 +337,7 @@ class TestFailModes:
         args = [
             str(path)
             for path in list(valid_schemas.values()) + list(invalid_schemas.values())
-        ] + ["--fail-mode", "fail_after", "--verbose"]
+        ] + ["--fail-mode", "after", "--verbose"]
 
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format)
@@ -450,7 +450,7 @@ class TestOverrides:
         args = [
             str(path)
             for path in list(valid_schemas.values()) + list(invalid_schemas.values())
-        ] + ["--fail-fast", "--fail-never", "--fail-mode", "fail_after", "--verbose"]
+        ] + ["--fail-fast", "--fail-never", "--fail-mode", "after", "--verbose"]
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format)
         )
@@ -473,7 +473,7 @@ class TestOverrides:
         args = [
             str(path)
             for path in list(valid_schemas.values()) + list(invalid_schemas.values())
-        ] + ["--fail-never", "--fail-mode", "fail_after", "--verbose"]
+        ] + ["--fail-never", "--fail-mode", "after", "--verbose"]
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format)
         )
@@ -514,8 +514,8 @@ class TestEnvVariables:
             [str(path) for path in valid_schemas.values()],
             env={
                 "SCHEMAX_VALIDATE_OUTPUT_FORMAT": "json",
-                "SCHEMAX_VALIDATE_VERBOSE": "true",
-                "SCHEMAX_VALIDATE_FAIL_AFTER": "true",
+                "SCHEMAX_VALIDATE_OUTPUT_LEVEL": "verbose",
+                "SCHEMAX_VALIDATE_FAIL_MODE": "after",
             },
         )
         _validate_json_stdout(
@@ -531,9 +531,9 @@ class TestEnvVariables:
             validate,
             [str(path) for path in invalid_schemas.values()],
             env={
-                "SCHEMAX_VALIDATE_JSON": "true",
-                "SCHEMAX_VALIDATE_SILENT": "true",
-                "SCHEMAX_VALIDATE_FAIL_AFTER": "true",
+                "SCHEMAX_VALIDATE_OUTPUT_FORMAT": "json",
+                "SCHEMAX_VALIDATE_OUTPUT_LEVEL": "silent",
+                "SCHEMAX_VALIDATE_FAIL_MODE": "after",
             },
         )
         _validate_json_stdout(
@@ -550,7 +550,7 @@ class TestEnvVariables:
             [str(path) for path in invalid_schemas.values()],
             env={
                 "SCHEMAX_VALIDATE_OUTPUT_FORMAT": "text",
-                "SCHEMAX_VALIDATE_FAIL_NEVER": "true",
+                "SCHEMAX_VALIDATE_FAIL_MODE": "never",
             },
         )
         _validate_text_stdout(
@@ -566,7 +566,7 @@ class TestEnvVariables:
             validate,
             [str(path) for path in invalid_schemas.values()],
             env={
-                "SCHEMAX_VALIDATE_FAIL_FAST": "true",
+                "SCHEMAX_VALIDATE_FAIL_MODE": "fast",
             },
         )
         _validate_text_stdout(
@@ -585,8 +585,8 @@ class TestConfigFile:
             with open(input_file, "w") as f:
                 f.write("[schemax.validate]\n")
                 f.write('output_format = "json"\n')
-                f.write('output_level_verbose = "true"\n')
-                f.write('fail_never = "true"\n')
+                f.write('output_level = "verbose"\n')
+                f.write('fail_mode = "never"\n')
 
             with open("valid_schema.json", "w") as f:
                 json.dump(
@@ -615,8 +615,8 @@ class TestConfigFile:
             with open("pyproject.toml", "w") as f:
                 f.write("[tool.schemax.validate]\n")
                 f.write('output_format = "json"\n')
-                f.write('output_level_verbose = "true"\n')
-                f.write('fail_never = "true"\n')
+                f.write('output_level = "verbose"\n')
+                f.write('fail_mode = "never"\n')
 
             with open("valid_schema.json", "w") as f:
                 json.dump(
@@ -644,8 +644,8 @@ class TestConfigFile:
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
             f.write("output_format = text\n")
-            f.write("output_level_verbose = true\n")
-            f.write("fail_never = true\n")
+            f.write("output_level = verbose\n")
+            f.write("fail_mode = never\n")
 
         runner = CliRunner()
         args = [str(path) for path in valid_schemas.values()] + [
@@ -665,8 +665,8 @@ class TestConfigFile:
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
             f.write("output_format = text\n")
-            f.write("output_level_silent = true\n")
-            f.write("fail_after = true\n")
+            f.write("output_level = silent\n")
+            f.write("fail_mode = after\n")
 
         runner = CliRunner()
         args = [str(path) for path in invalid_schemas.values()] + [
@@ -686,7 +686,7 @@ class TestConfigFile:
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
             f.write('output_format = "json"\n')
-            f.write('fail_never = "true"\n')
+            f.write('fail_mode = "never"\n')
 
         runner = CliRunner()
         args = [str(path) for path in invalid_schemas.values()] + [
@@ -706,7 +706,7 @@ class TestConfigFile:
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
             f.write('output_format = "json"\n')
-            f.write('fail_fast = "true"\n')
+            f.write('fail_mode = "fast"\n')
 
         runner = CliRunner()
         args = [str(path) for path in invalid_schemas.values()] + [
@@ -799,7 +799,7 @@ class TestConfigOverrides:
             env={
                 "SCHEMAX_VALIDATE_OUTPUT_FORMAT": "text",
                 "SCHEMAX_VALIDATE_OUTPUT_LEVEL": "verbose",
-                "SCHEMAX_VALIDATE_FAIL_MODE": "fail_fast",
+                "SCHEMAX_VALIDATE_FAIL_MODE": "fast",
             },
         )
 
@@ -818,7 +818,7 @@ class TestConfigOverrides:
             "--output-level",
             "silent",
             "--fail-mode",
-            "fail_never",
+            "never",
         ]
         result = runner.invoke(
             validate,
@@ -826,7 +826,7 @@ class TestConfigOverrides:
             env={
                 "SCHEMAX_VALIDATE_OUTPUT_FORMAT": "text",
                 "SCHEMAX_VALIDATE_OUTPUT_LEVEL": "verbose",
-                "SCHEMAX_VALIDATE_FAIL_MODE": "fail_fast",
+                "SCHEMAX_VALIDATE_FAIL_MODE": "fast",
             },
         )
 
