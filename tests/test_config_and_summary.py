@@ -5,14 +5,14 @@ from py_schemax.summary import Summary
 class TestDefaultConfig:
     def test_default_values(self):
         config = Config()
-        assert config.fail_mode == FailModeEnum.FAIL_AFTER
+        assert config.fail_mode == FailModeEnum.AFTER
         assert config.output_format == OutputFormatEnum.TEXT
         assert config.output_level == OutputLevelEnum.QUIET
 
     def test_default_set_modes(self):
         config = Config()
         config.set_fail_mode()
-        assert config.fail_mode == FailModeEnum.FAIL_AFTER
+        assert config.fail_mode == FailModeEnum.AFTER
 
         config.set_output_format()
         assert config.output_format == OutputFormatEnum.TEXT
@@ -24,20 +24,20 @@ class TestDefaultConfig:
 class TestSettingConfig:
     def test_set_fail_mode(self):
         config = Config()
+        config.set_fail_mode(fail_mode="fast")
+        assert config.fail_mode == FailModeEnum.FAST
+
         config.set_fail_mode(fail_fast=True)
-        assert config.fail_mode == FailModeEnum.FAIL_FAST
+        assert config.fail_mode == FailModeEnum.FAST
 
         config.set_fail_mode(fail_never=True)
-        assert config.fail_mode == FailModeEnum.FAIL_NEVER
-
-        config.set_fail_mode(fail_after=True)
-        assert config.fail_mode == FailModeEnum.FAIL_AFTER
+        assert config.fail_mode == FailModeEnum.NEVER
 
         config.set_fail_mode(fail_fast=True, fail_never=True)
-        assert config.fail_mode == FailModeEnum.FAIL_FAST
+        assert config.fail_mode == FailModeEnum.FAST
 
-        config.set_fail_mode(fail_fast=True, fail_never=True, fail_after=True)
-        assert config.fail_mode == FailModeEnum.FAIL_FAST
+        config.set_fail_mode(fail_fast=True, fail_never=True, fail_mode="never")
+        assert config.fail_mode == FailModeEnum.FAST
 
     def test_set_output_format(self):
         config = Config()
@@ -55,25 +55,27 @@ class TestSettingConfig:
 
     def test_set_output_level(self):
         config = Config()
-        config.set_output_level(quiet=True)
-        assert config.output_level == OutputLevelEnum.QUIET
-
-        config.set_output_level(verbose=True)
+        config.set_output_level(output_level="verbose")
         assert config.output_level == OutputLevelEnum.VERBOSE
 
-        config.set_output_level(silent=True)
+        config.set_output_level(output_level_verbose=True)
+        assert config.output_level == OutputLevelEnum.VERBOSE
+
+        config.set_output_level(output_level_silent=True)
         assert config.output_level == OutputLevelEnum.SILENT
 
-        config.set_output_level(quiet=True, verbose=True)
+        config.set_output_level(output_level="silent", output_level_verbose=True)
         assert config.output_level == OutputLevelEnum.VERBOSE
 
-        config.set_output_level(quiet=True, verbose=True, silent=True)
+        config.set_output_level(
+            output_level="verbose", output_level_verbose=True, output_level_silent=True
+        )
         assert config.output_level == OutputLevelEnum.SILENT
 
     def test_reset(self):
         config = Config()
         config.reset()
-        assert config.fail_mode == FailModeEnum.FAIL_AFTER
+        assert config.fail_mode == FailModeEnum.AFTER
         assert config.output_format == OutputFormatEnum.TEXT
         assert config.output_level == OutputLevelEnum.QUIET
 

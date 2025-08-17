@@ -43,7 +43,7 @@ class Output:
                 OutputLevelEnum.VERBOSE,
             ):
                 self.__print_formatted_validation_output(validation_output)
-            if self.config.fail_mode == FailModeEnum.FAIL_FAST:
+            if self.config.fail_mode == FailModeEnum.FAST:
                 self.end_control()
         else:
             self.summary.add_record(
@@ -55,8 +55,8 @@ class Output:
     def end_control(self) -> None:
         if self.summary.invalid_file_count > 0:
             if self.config.fail_mode in (
-                FailModeEnum.FAIL_AFTER,
-                FailModeEnum.FAIL_FAST,
+                FailModeEnum.AFTER,
+                FailModeEnum.FAST,
             ):
                 raise click.ClickException("Validation completed with errors!")
             else:

@@ -17,6 +17,7 @@ Other similar alternatives,
 - **Extensible Schema Validation**: Validate JSON and YAML schema files against robust Pydantic models. Easily extend validation rules by updating model attributes—no complex configuration required.
 - **Clear, Structured Error Reporting**: Detailed error messages with precise [JSONPath](https://jsonpath.com/) style locations and readable formatting make troubleshooting straightforward.
 - **Flexible CLI Output & Controls**: Choose between text or JSON output, adjust verbosity, and control exit codes for seamless integration with CI/CD workflows.
+- **Multiple Configuration Options**: Support for configuration files (INI/TOML), environment variables, and command-line flags with clear precedence rules.
 
 ## 🚀 Getting Started
 
@@ -43,6 +44,13 @@ ls * | schemax validate
 schemax validate --verbose schema.json     # Prints both OK and ERR records
 schemax validate --json schema.json        # JSON output format, for CI/CD
 schemax validate --fail-fast schema.json   # Stop on first error, useful for debugging large projects
+
+# Use configuration files or environment variables
+schemax validate --config my-config.ini schema.json    # Custom config file
+SCHEMAX_VALIDATE_OUTPUT_FORMAT=json schemax validate schema.json  # Environment variable
+
+# See sample configuration files in the repository:
+# - sample.schemax.ini, sample.schemax.toml, sample.pyproject.toml, sample.env.sh
 ```
 
 Refer [USAGE.md](/USAGE.md) for more detailed user guide.

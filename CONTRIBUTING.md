@@ -4,14 +4,7 @@ Thank you for your interest in contributing to py-schemax! This document provide
 
 ## Table of Contents
 
-- 2. **Commit and push**:
-   ```bash
-   git add .
-   git commit -m "Your descriptive commit message"
-   git push origin feature/your-feature-name
-   ```
-
-4. **Create Pull Request** with: Overview](#project-overview)
+- [Project Overview](#project-overview)
 - [Development Setup](#development-setup)
 - [Development Workflow](#development-workflow)
 - [Testing](#testing)
@@ -63,8 +56,8 @@ py-schemax is a CLI tool for validating data schema definitions (JSON/YAML) agai
 
 4. **Set up pre-commit hooks**:
    ```bash
-   pre-commit install
-   pre-commit install --hook-type pre-push
+   uv run pre-commit install
+   uv run pre-commit install --hook-type pre-push
    ```
 
 5. **Verify installation**:
@@ -100,7 +93,7 @@ py-schemax is a CLI tool for validating data schema definitions (JSON/YAML) agai
 
 - **Test Location**: `tests/` directory
 - **Fixtures**: `tests/fixtures/{valid_schemas,invalid_schemas}/` for test data
-- **Coverage**: Minimum 80% required
+- **Coverage**: Minimum 80% required (try to keep it at 100%)
 - **Multi-version**: Tests run on Python 3.10, 3.11, 3.12, and 3.13
 
 ### CLI Testing Pattern
@@ -149,7 +142,7 @@ uv run nox -s security
 - **Ruff**: Fast linting and additional formatting
 - **MyPy**: Static type checking with strict settings
 - **Bandit**: Security vulnerability scanning
-- **Safety**: Dependency vulnerability scanning
+- **Safety/pip-audit**: Dependency vulnerability scanning (with fallback)
 
 ### Pre-commit Hooks
 
@@ -170,11 +163,15 @@ Pre-push hooks run on every push:
 ### Core Flow
 
 1. **CLI Entry** (`py_schemax/cli.py`) - Click-based CLI with `schemax validate` command
-2. **Validation** (`py_schemax/validator.py`) - Core validation logic
-3. **Schema Models** (`py_schemax/schema/dataset.py`) - Pydantic models defining schema structure
-4. **Output Control** (`py_schemax/output.py`) - Manages output formats and verbosity
+2. **Configuration** (`py_schemax/config.py`) - Configuration management with precedence
+3. **Validation** (`py_schemax/validator.py`) - Core validation logic
+4. **Schema Models** (`py_schemax/schema/dataset.py`) - Pydantic models defining schema structure
+5. **Output Control** (`py_schemax/output.py`) - Manages output formats and verbosity
 
 **Key Points**:
+- Configuration precedence: CLI flags > environment variables > config files > defaults
+- Supported config files: `schemax.ini`, `schemax.toml`, `pyproject.toml`
+- Environment variables use `SCHEMAX_VALIDATE_*` prefix
 - Validation logic handles JSON and YAML files
 - File validation includes graceful error handling
 - Always validate against Pydantic schema models
@@ -201,7 +198,7 @@ Pre-push hooks run on every push:
 
 ### Branch Strategy
 
-- `main` - Default Stable releases
+- `main` - Stable releases (current default branch)
 - Feature branches convention - `feature/your-feature-name`
 - Bugfix branches convention - `bugfix/issue-description`
 
@@ -309,7 +306,7 @@ uv run mypy py_schemax --verbose
 **Pre-commit hook failures**:
 ```bash
 # Run hooks manually
-pre-commit run --all-files
+uv run pre-commit run --all-files
 ```
 
 ### Getting Help
