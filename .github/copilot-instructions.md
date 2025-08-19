@@ -45,7 +45,7 @@ py_schemax/
   - Failure modes: `--fail-fast`, `--fail-never`, `--fail-after`
   - Configuration: `--config` flag for custom config files
 - **Configuration Support**:
-  - Default config files: `schemax.ini`, `schemax.toml`, `pyproject.toml`
+  - Default config files: `schemax.toml`, `pyproject.toml`
   - Environment variables: `SCHEMAX_VALIDATE_*` prefix
   - Precedence: CLI flags > env vars > config files > defaults
 - **Flow**: Accepts file paths → parses config → creates Config → validates files → handles output
@@ -53,8 +53,7 @@ py_schemax/
 #### 1a. Configuration Management (`config.py`)
 - **Purpose**: Centralized configuration handling with multiple sources
 - **Key Functions**:
-  - `parse_config_files()`: Parse INI/TOML config files
-  - `parse_ini_config_file()`: INI format parser
+  - `parse_config_files()`: Parse TOML config files
   - `parse_toml_config_file()`: TOML format parser
 - **Key Classes**:
   - `Config`: Main configuration manager
@@ -63,7 +62,7 @@ py_schemax/
 - **Configuration Sources** (in precedence order):
   1. CLI flags (highest)
   2. Environment variables (`SCHEMAX_VALIDATE_*`)
-  3. Config files (`schemax.ini`, `schemax.toml`, `pyproject.toml`)
+  3. Config files (`schemax.toml`, `pyproject.toml`)
   4. Built-in defaults (lowest)
 
 #### 2. Core Validation (`validator.py`)

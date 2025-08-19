@@ -66,7 +66,7 @@ def test_cli_command():
 
 **Key Points**:
 - Configuration precedence: CLI flags > environment variables > config files > defaults
-- Supported config files: `schemax.ini`, `schemax.toml`, `pyproject.toml`
+- Supported config files: `schemax.toml`, `pyproject.toml`
 - Environment variables use `SCHEMAX_VALIDATE_*` prefix
 - Validation logic handles JSON and YAML files
 - File validation includes graceful error handling

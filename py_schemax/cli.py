@@ -145,6 +145,7 @@ def main() -> None:
     type=click.Choice([e.name for e in ValidationRuleSetEnum]),
     multiple=True,
     help="Apply validation rules, only specified rules will be applied",
+    envvar="SCHEMAX_VALIDATE_RULE_APPLY",
 )
 @click.option(
     "--rule-ignore",
@@ -152,6 +153,7 @@ def main() -> None:
     type=click.Choice([e.name for e in ValidationRuleSetEnum]),
     multiple=True,
     help="Ignore validation rules, only specified rules will be ignored",
+    envvar="SCHEMAX_VALIDATE_RULE_IGNORE",
 )
 def validate(
     file_paths: List[str],

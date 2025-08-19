@@ -640,12 +640,12 @@ class TestConfigFile:
             )
 
     def test_config_file_is_accepted_text_verbose(self, valid_schemas):
-        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.ini")
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
-            f.write("output_format = text\n")
-            f.write("output_level = verbose\n")
-            f.write("fail_mode = never\n")
+            f.write('output_format = "text"\n')
+            f.write('output_level = "verbose"\n')
+            f.write('fail_mode = "never"\n')
 
         runner = CliRunner()
         args = [str(path) for path in valid_schemas.values()] + [
@@ -661,12 +661,12 @@ class TestConfigFile:
         )
 
     def test_config_file_is_accepted_text_silent(self, invalid_schemas):
-        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.ini")
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
-            f.write("output_format = text\n")
-            f.write("output_level = silent\n")
-            f.write("fail_mode = after\n")
+            f.write('output_format = "text"\n')
+            f.write('output_level = "silent"\n')
+            f.write('fail_mode = "after"\n')
 
         runner = CliRunner()
         args = [str(path) for path in invalid_schemas.values()] + [
@@ -724,7 +724,7 @@ class TestConfigFile:
 
 class TestInvalidConfigFile:
     def test_non_existent_config_file(self, valid_schemas):
-        temp_file_path = tempfile.mkdtemp() + "/non_existent_config.ini"
+        temp_file_path = tempfile.mkdtemp() + "/non_existent_config.toml"
         runner = CliRunner()
         args = [str(path) for path in valid_schemas.values()] + [
             "--config",
@@ -735,25 +735,10 @@ class TestInvalidConfigFile:
         assert f"none of the provided config files are valid" in result.stderr
 
     def test_wo_validation_section(self, valid_schemas):
-        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.ini")
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
         with open(temp_file_path, "w") as f:
             f.write("[schemax.other]\n")
-            f.write("output_format = json\n")
-
-        runner = CliRunner()
-        args = [str(path) for path in valid_schemas.values()] + [
-            "--config",
-            temp_file_path,
-        ]
-        result = runner.invoke(validate, args)
-        assert result.exit_code == 2
-        assert f"none of the provided config files are valid" in result.stderr
-
-    def test_invalid_ini_file(self, valid_schemas):
-        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.ini")
-        with open(temp_file_path, "w") as f:
-            f.write("[schemax.validate]\n")
-            f.write("invalid_line\n")
+            f.write('output_format = "json"\n')
 
         runner = CliRunner()
         args = [str(path) for path in valid_schemas.values()] + [
@@ -781,12 +766,12 @@ class TestInvalidConfigFile:
 
 class TestConfigOverrides:
     def test_override_env_over_file(self, invalid_schemas):
-        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.ini")
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
-            f.write("output_format = json\n")
-            f.write("output_level = silent\n")
-            f.write("fail_mode = fail_never\n")
+            f.write('output_format = "json"\n')
+            f.write('output_level = "silent"\n')
+            f.write('fail_mode = "never"\n')
 
         runner = CliRunner()
         args = [str(path) for path in invalid_schemas.values()] + [
@@ -856,3 +841,54 @@ class TestRulesetApplication:
         ]
         result = runner.invoke(validate, args)
         assert result.exit_code == 0
+
+    def test_apply_from_envvars(self, invalid_schemas):
+        runner = CliRunner()
+        args = [str(invalid_schemas["invalid_columns"])]
+        result = runner.invoke(
+            validate,
+            args,
+            env={
+                "SCHEMAX_VALIDATE_RULE_APPLY": "PSX_VAL1",
+            },
+        )
+        assert result.exit_code == 1
+
+    def test_ignore_from_envvars(self, invalid_schemas):
+        runner = CliRunner()
+        args = [str(invalid_schemas["invalid_columns"])]
+        result = runner.invoke(
+            validate,
+            args,
+            env={
+                "SCHEMAX_VALIDATE_RULE_IGNORE": "PSX_VAL1",
+            },
+        )
+        assert result.exit_code == 0
+
+    def test_apply_from_config_file(self, invalid_schemas):
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
+        with open(temp_file_path, "w") as f:
+            f.write("[schemax.validate]\n")
+            f.write('rule_apply = ["PSX_VAL1"]\n')
+
+        runner = CliRunner()
+        args = [str(invalid_schemas["invalid_columns"])] + [
+            "--config",
+            temp_file_path,
+        ]
+        result = runner.invoke(validate, args)
+        assert result.exit_code == 1
+
+    def test_ignore_from_config_file(self, invalid_schemas):
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
+        with open(temp_file_path, "w") as f:
+            f.write("[schemax.validate]\n")
+            f.write('rule_ignore = ["PSX_VAL1"]\n')
+
+        runner = CliRunner()
+        args = [str(invalid_schemas["invalid_columns"])] + [
+            "--config",
+            temp_file_path,
+        ]
+        result = runner.invoke(validate, args)

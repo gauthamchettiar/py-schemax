@@ -46,11 +46,11 @@ schemax validate --json schema.json        # JSON output format, for CI/CD
 schemax validate --fail-fast schema.json   # Stop on first error, useful for debugging large projects
 
 # Use configuration files or environment variables
-schemax validate --config my-config.ini schema.json    # Custom config file
+schemax validate --config my-config.toml schema.json    # Custom config file
 SCHEMAX_VALIDATE_OUTPUT_FORMAT=json schemax validate schema.json  # Environment variable
 
 # See sample configuration files in the repository:
-# - sample.schemax.ini, sample.schemax.toml, sample.pyproject.toml, sample.env.sh
+# - sample.schemax.toml, sample.pyproject.toml, sample.env.sh
 ```
 
 Refer [USAGE.md](/USAGE.md) for more detailed user guide.

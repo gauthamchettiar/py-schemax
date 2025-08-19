@@ -17,6 +17,8 @@ ls schemas/ | schemax validate             # From pipe
 schemax validate --verbose schema.json    # Show all results
 schemax validate --json schema.json       # JSON output
 schemax validate --fail-fast *.json       # Stop on first error
+schemax validate --rule-apply PSX_VAL1 schema.json  # Apply only specific rules
+schemax validate --rule-ignore PSX_VAL1 schema.json # Ignore specific rules
 ```
 
 ## Configuration
@@ -24,15 +26,7 @@ schemax validate --fail-fast *.json       # Stop on first error
 Configuration precedence (highest to lowest): **CLI flags** → **Environment variables** → **Config files** → **Built-in defaults**
 
 ### Config Files
-Auto-detected: `schemax.ini`, `schemax.toml`, `pyproject.toml` (or use `--config custom.ini`)
-
-```ini
-# schemax.ini
-[schemax.validate]
-output_format = "json"
-output_level = "verbose"
-fail_mode = "after"
-```
+Auto-detected: `schemax.toml`, `pyproject.toml` (or use `--config custom.toml`)
 
 ```toml
 # schemax.toml or pyproject.toml
@@ -55,6 +49,7 @@ export SCHEMAX_VALIDATE_FAIL_MODE="never"
 | Output Format | `--json`, `--out` | `SCHEMAX_VALIDATE_OUTPUT_FORMAT` | `output_format` | `json`, `text` | `text` |
 | Verbosity | `--verbose`, `--silent` | `SCHEMAX_VALIDATE_OUTPUT_LEVEL` | `output_level` | `silent`, `quiet`, `verbose` | `quiet` |
 | Failure Mode | `--fail-fast`, `--fail-never` | `SCHEMAX_VALIDATE_FAIL_MODE` | `fail_mode` | `fast`, `never`, `after` | `after` |
+| Rule Control | `--rule-apply`, `--rule-ignore` | - | - | `PSX_VAL1` | All rules applied |
 
 ## Schema File Format
 
@@ -284,6 +279,54 @@ schemax validate --fail-never schema1.json schema2.json
 # Useful for CI/CD when you want to collect all results
 ```
 
+### Validation Rules Control
+
+py-schemax uses a modular validation system with different rule sets that can be selectively applied or ignored.
+
+#### Available Validation Rules
+
+| Rule ID | Description |
+|---------|-------------|
+| `PSX_VAL1` | **Pydantic Schema Validation** - Validates schema structure, data types, constraints, and required fields according to the defined Pydantic models |
+
+#### Rule Control Options
+
+```bash
+# Apply only specific rules (ignores default rule set)
+schemax validate --rule-apply PSX_VAL1 schema.json
+# Only runs Pydantic schema validation
+
+# Ignore specific rules (applies all other rules)
+schemax validate --rule-ignore PSX_VAL1 schema.json
+# Skips Pydantic validation (currently would only validate file format)
+
+# Combine multiple rules (when more rules are available)
+schemax validate --rule-apply PSX_VAL1 --rule-apply CUSTOM_RULE schema.json
+schemax validate --rule-ignore PSX_VAL1 --rule-ignore CUSTOM_RULE schema.json
+
+# Rule precedence: --rule-apply takes precedence over defaults
+# If --rule-apply is specified, only those rules are applied
+# If --rule-ignore is specified, those rules are excluded from the default set
+```
+
+#### Rule Behavior Examples
+
+```bash
+# Default behavior (all rules applied)
+schemax validate schema.json
+# Runs: File format validation + PSX_VAL1 (Pydantic validation)
+
+# Apply only schema validation
+schemax validate --rule-apply PSX_VAL1 schema.json
+# Runs: File format validation + PSX_VAL1 only
+
+# Skip schema validation (validate only file format)
+schemax validate --rule-ignore PSX_VAL1 schema.json
+# Runs: File format validation only (checks JSON/YAML syntax)
+```
+
+**Note**: File format validation (JSON/YAML parsing) always runs first regardless of rule settings. Rule control applies to the schema validation layer.
+
 ### Combining Options
 
 ```bash
@@ -299,6 +342,15 @@ schemax validate --config ci.toml --fail-fast *.json
 # Environment variable with CLI override
 export SCHEMAX_VALIDATE_OUTPUT_FORMAT="text"
 schemax validate --json schema.json  # Uses JSON despite env var
+
+# Selective rule application with output control
+schemax validate --rule-apply PSX_VAL1 --json --verbose *.json
+
+# Skip specific rules with fail-fast behavior
+schemax validate --rule-ignore PSX_VAL1 --fail-fast schemas/*.yaml
+
+# Complex combination: JSON output, verbose mode, custom rules, never fail
+schemax validate --json --verbose --rule-apply PSX_VAL1 --fail-never schemas/
 ```
 
 ## Integration with CI/CD
@@ -420,5 +472,7 @@ schemax validate --json problematic_schema.json | jq '.'
 | `schemax validate --fail-fast *.json` | Stop on first error |
 | `schemax validate --fail-never *.yaml` | Never exit with error code |
 | `schemax validate --silent file.json` | No output, only exit codes |
-| `schemax validate --config custom.ini *.json` | Use custom config file |
+| `schemax validate --config custom.toml *.json` | Use custom config file |
+| `schemax validate --rule-apply PSX_VAL1 file.json` | Apply only specific validation rules |
+| `schemax validate --rule-ignore PSX_VAL1 file.json` | Ignore specific validation rules |
 | `find . -name "*.json" \| schemax validate` | Validate files from pipe |
