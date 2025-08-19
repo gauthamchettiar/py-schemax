@@ -1,7 +1,5 @@
 """Main CLI module for py-schemax."""
 
-import os
-from configparser import ConfigParser
 from typing import Any, Callable, List, MutableMapping
 
 import click
@@ -16,7 +14,11 @@ from py_schemax.config import (
     parse_config_files,
 )
 from py_schemax.output import Output
-from py_schemax.rulesets import validate_file_by_ruleset
+from py_schemax.rulesets import (
+    DEFAULT_RULESETS,
+    ValidationRuleSetEnum,
+    validate_file_by_ruleset,
+)
 from py_schemax.utils import accept_file_paths_as_stdin
 
 IGNORE_KEYS_FROM_CONFIG = [
@@ -137,9 +139,21 @@ def main() -> None:
     is_flag=True,
     help="Stop on first validation error, overrides --fail-never and --fail-after",
 )
-@click.pass_context
+@click.option(
+    "--rule-apply",
+    "rule_apply",
+    type=click.Choice([e.name for e in ValidationRuleSetEnum]),
+    multiple=True,
+    help="Apply validation rules, only specified rules will be applied",
+)
+@click.option(
+    "--rule-ignore",
+    "rule_ignore",
+    type=click.Choice([e.name for e in ValidationRuleSetEnum]),
+    multiple=True,
+    help="Ignore validation rules, only specified rules will be ignored",
+)
 def validate(
-    ctx: click.Context,
     file_paths: List[str],
     output_format: str,
     use_json: bool,
@@ -149,6 +163,8 @@ def validate(
     fail_mode: str,
     fail_fast: bool,
     fail_never: bool,
+    rule_apply: tuple[str, ...],
+    rule_ignore: tuple[str, ...],
 ) -> None:
     """Validate schema files against the defined Pydantic data model structure.
 
@@ -214,8 +230,19 @@ def validate(
 
     output = Output(config=config)
 
+    rule_apply_enums = (
+        [ValidationRuleSetEnum[name] for name in rule_apply]
+        if rule_apply
+        else DEFAULT_RULESETS
+    )
+    rule_ignore_enums = (
+        [ValidationRuleSetEnum[name] for name in rule_ignore] if rule_ignore else []
+    )
+
+    rulesets = [rule for rule in rule_apply_enums if rule not in rule_ignore_enums]
+
     for path in file_paths:
-        validation_output = validate_file_by_ruleset(config, path)
+        validation_output = validate_file_by_ruleset(config, path, rulesets)
         output.print_validation_output(validation_output)
 
     output.end_control()

@@ -836,3 +836,23 @@ class TestConfigOverrides:
             expected_ok_count=0,
             expected_error_count=0,
         )
+
+
+class TestRulesetApplication:
+    def test_apply_specific_rules(self, invalid_schemas):
+        runner = CliRunner()
+        args = [str(invalid_schemas["invalid_columns"])] + [
+            "--rule-apply",
+            "PSX_VAL1",
+        ]
+        result = runner.invoke(validate, args)
+        assert result.exit_code == 1
+
+    def test_ignore_specific_rules(self, invalid_schemas):
+        runner = CliRunner()
+        args = [str(invalid_schemas["invalid_columns"])] + [
+            "--rule-ignore",
+            "PSX_VAL1",
+        ]
+        result = runner.invoke(validate, args)
+        assert result.exit_code == 0

@@ -11,17 +11,15 @@ class ValidationRuleSetEnum(Enum):
     PSX_VAL1 = PydanticSchemaValidator
 
 
-DEFAULT_RULESETS = [ValidationRuleSetEnum.PSX_VAL1]
+DEFAULT_RULESETS = (ValidationRuleSetEnum.PSX_VAL1,)
 
 
 def validate_file_by_ruleset(
     config: Config,
     file_path: str | Path,
-    apply_rules: list[ValidationRuleSetEnum] | None = None,
+    apply_rules: list[ValidationRuleSetEnum],
 ) -> ValidationOutputSchema:
     """Validate a file using the appropriate validator based on its extension."""
-    apply_rules = apply_rules or DEFAULT_RULESETS
-
     file_validator = FileValidator(config)
     if (file_validator_output := file_validator.validate(file_path)).get(
         "valid", False
