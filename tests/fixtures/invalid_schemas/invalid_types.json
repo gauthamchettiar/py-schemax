@@ -1,5 +1,6 @@
 {
   "name": "Invalid Types",
+  "fqn": "tests.fixtures.invalid_schemas.invalid_types",
   "columns": [
     {
       "name": "bad_field",

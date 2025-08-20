@@ -1,5 +1,6 @@
 name: "Invalid Dataset"
 description: "A dataset with validation errors"
+fqn: "tests.fixtures.invalid_schemas.invalid_yaml"
 # Invalid column structure
 columns:
   - name: "valid column"

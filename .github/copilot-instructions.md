@@ -45,7 +45,7 @@ py_schemax/
   - Failure modes: `--fail-fast`, `--fail-never`, `--fail-after`
   - Configuration: `--config` flag for custom config files
 - **Configuration Support**:
-  - Default config files: `schemax.ini`, `schemax.toml`, `pyproject.toml`
+  - Default config files: `schemax.toml`, `pyproject.toml`
   - Environment variables: `SCHEMAX_VALIDATE_*` prefix
   - Precedence: CLI flags > env vars > config files > defaults
 - **Flow**: Accepts file paths → parses config → creates Config → validates files → handles output
@@ -53,8 +53,7 @@ py_schemax/
 #### 1a. Configuration Management (`config.py`)
 - **Purpose**: Centralized configuration handling with multiple sources
 - **Key Functions**:
-  - `parse_config_files()`: Parse INI/TOML config files
-  - `parse_ini_config_file()`: INI format parser
+  - `parse_config_files()`: Parse TOML config files
   - `parse_toml_config_file()`: TOML format parser
 - **Key Classes**:
   - `Config`: Main configuration manager
@@ -63,16 +62,22 @@ py_schemax/
 - **Configuration Sources** (in precedence order):
   1. CLI flags (highest)
   2. Environment variables (`SCHEMAX_VALIDATE_*`)
-  3. Config files (`schemax.ini`, `schemax.toml`, `pyproject.toml`)
+  3. Config files (`schemax.toml`, `pyproject.toml`)
   4. Built-in defaults (lowest)
 
 #### 2. Core Validation (`validator.py`)
-- **Purpose**: Main validation engine
+- **Purpose**: Main validation engine with modular validator classes
+- **Key Classes**:
+  - `Validator`: Abstract base class for all validators
+  - `FileValidator`: Handles file parsing and format validation (JSON/YAML)
+  - `PydanticSchemaValidator`: Schema structure validation using Pydantic models
+  - `UniqueFQNValidator`: Cross-file FQN uniqueness validation
 - **Key Functions**:
-  - `validate_file()`: File validation entry point accepting Config
+  - `validate()`: Main validation method for each validator class
   - `_format_loc_as_jsonql()`: Converts Pydantic error locations to JSONPath format
   - `_format_pydantic_error_as_text()`: Human-readable error message generation
 - **Error Handling**: Structured error output with JSONPath-style locations
+- **Validation Architecture**: Each validator operates independently and can be combined through the ruleset system
 
 #### 3. Output Control (`output.py`)
 - **Purpose**: Centralized output formatting and control
@@ -109,6 +114,18 @@ py_schemax/
 - **Purpose**: Supporting utility functions
 - **Key Functions**:
   - `accept_file_paths_as_stdin()`: Handle file paths from stdin for pipe operations
+
+#### 8. Validation Rules System (`rulesets.py`)
+- **Purpose**: Modular validation system with configurable rule sets
+- **Key Components**:
+  - `ValidationRuleSetEnum`: Enumeration of available validation rules
+  - `RuleSetBasedValidation`: Main validation orchestrator class
+  - `DEFAULT_RULESETS`: Default set of rules applied when no specific rules are specified
+- **Available Rules**:
+  - `PSX_VAL1` (`PydanticSchemaValidator`): Core schema validation using Pydantic models
+  - `PSX_VAL2` (`UniqueFQNValidator`): Cross-file FQN uniqueness validation
+- **Rule Control**: CLI flags `--rule-apply` and `--rule-ignore` for selective rule execution
+- **Validation Flow**: File format validation always runs first, followed by selected schema validation rules
 
 ### Key Design Patterns
 

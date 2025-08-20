@@ -1,4 +1,5 @@
 name: "Incompatible Arguments Test"
+fqn: "tests.fixtures.invalid_schemas.invalid_columns"
 description: "Schema with incompatible arguments for various data types"
 version: "1.0"
 columns:

@@ -1,8 +1,5 @@
-import os
 import tomllib
-from configparser import ConfigParser, ParsingError
 from enum import Enum
-from fileinput import filename
 from pathlib import Path
 from typing import Any, List, Tuple
 
@@ -24,7 +21,7 @@ class FailModeEnum(Enum):
     AFTER = "after"
 
 
-DEFAULT_CONFIG_FILES = ["schemax.ini", "schemax.toml", "pyproject.toml"]
+DEFAULT_CONFIG_FILES = ["schemax.toml", "pyproject.toml"]
 
 
 class DefaultConfig:
@@ -114,11 +111,7 @@ def parse_config_files(
     parsed_configs = {}
     for str_file_path in file_paths:
         file_path = Path(str_file_path)
-        if file_path.suffix == ".ini":
-            parsed_configs = parse_ini_config_file(
-                str_file_path, f"schemax.{section_name}"
-            )
-        elif file_path.suffix == ".toml":
+        if file_path.suffix == ".toml":
             parsed_configs = parse_toml_config_file(
                 str_file_path, f"schemax.{section_name}"
             ) or parse_toml_config_file(str_file_path, f"tool.schemax.{section_name}")
@@ -130,19 +123,6 @@ def parse_config_files(
             return str_file_path, parsed_configs
 
     return "", parsed_configs
-
-
-def parse_ini_config_file(ini_file_path: str, section_name: str) -> dict[str, Any]:
-    cfg_parser = ConfigParser()
-    try:
-        cfg_parser.read(ini_file_path)
-    except ParsingError as e:
-        return {}
-
-    if section_name not in cfg_parser:
-        return {}
-
-    return dict(cfg_parser[section_name])
 
 
 def parse_toml_config_file(toml_file_path: str, section_name: str) -> dict[str, Any]:
