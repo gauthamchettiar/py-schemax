@@ -892,3 +892,25 @@ class TestRulesetApplication:
             temp_file_path,
         ]
         result = runner.invoke(validate, args)
+        assert result.exit_code == 0
+
+
+class TestUniqueFQNValidation:
+    @pytest.mark.parametrize("output_format", ["text", "json"])
+    def test_unique_fqn_validation(self, valid_schemas, output_format):
+        runner = CliRunner()
+        args = [
+            str(valid_schemas["valid_simple_schema"]),
+            str(valid_schemas["valid_simple_schema"]),
+        ] + ["--verbose"]
+        result = runner.invoke(
+            validate, _with_output_format_option(args, output_format=output_format)
+        )
+
+        _validate_stdout(
+            result,
+            output_format=output_format,
+            expected_exit_code=1,
+            expected_ok_count=1,
+            expected_error_count=1,
+        )

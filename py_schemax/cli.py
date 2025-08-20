@@ -16,8 +16,8 @@ from py_schemax.config import (
 from py_schemax.output import Output
 from py_schemax.rulesets import (
     DEFAULT_RULESETS,
+    RuleSetBasedValidation,
     ValidationRuleSetEnum,
-    validate_file_by_ruleset,
 )
 from py_schemax.utils import accept_file_paths_as_stdin
 
@@ -243,8 +243,10 @@ def validate(
 
     rulesets = [rule for rule in rule_apply_enums if rule not in rule_ignore_enums]
 
+    rb_validator = RuleSetBasedValidation(config, rulesets)
+
     for path in file_paths:
-        validation_output = validate_file_by_ruleset(config, path, rulesets)
+        validation_output = rb_validator.validate_file(path)
         output.print_validation_output(validation_output)
 
     output.end_control()

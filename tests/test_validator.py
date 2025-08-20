@@ -2,7 +2,11 @@ import pytest
 
 from py_schemax.config import Config
 from py_schemax.schema.dataset import SUPPORTED_DATA_TYPES
-from py_schemax.validator import FileValidator, PydanticSchemaValidator
+from py_schemax.validator import (
+    FileValidator,
+    PydanticSchemaValidator,
+    UniqueFQNValidator,
+)
 
 
 class TestNonPydanticErrors:
@@ -90,7 +94,7 @@ class TestPydanticValidationErrors:
             "extra_field2": "This should not be here either",
         }
         psv = PydanticSchemaValidator(Config())
-        result = psv.validate(inp)
+        result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 2
         assert result["errors"][0]["error_at"] == "$.extra_field"
@@ -102,7 +106,6 @@ class TestPydanticValidationErrors:
             result["errors"][1]["message"]
             == "invalid attribute 'extra_field2' provided"
         )
-        assert psv.validated_content is None
 
     @pytest.mark.parametrize("data_type", SUPPORTED_DATA_TYPES)
     def test_extra_fields_in_columns(self, data_type: str):
@@ -119,7 +122,7 @@ class TestPydanticValidationErrors:
             ],
         }
         psv = PydanticSchemaValidator(Config())
-        result = psv.validate(inp)
+        result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 1
         assert result["errors"][0]["error_at"] == "$.columns[0].extra_field"
@@ -127,7 +130,6 @@ class TestPydanticValidationErrors:
             result["errors"][0]["message"]
             == f"'extra_field' invalid attribute for '{data_type}' type"
         )
-        assert psv.validated_content is None
 
     def test_missing_fields_at_root(self):
         inp = {
@@ -135,14 +137,13 @@ class TestPydanticValidationErrors:
             "description": "This dataset is missing required fields.",
         }
         psv = PydanticSchemaValidator(Config())
-        result = psv.validate(inp)
+        result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 2
         assert result["errors"][0]["error_at"] == "$.fqn"
         assert result["errors"][0]["message"] == "'fqn' attribute missing"
         assert result["errors"][1]["error_at"] == "$.columns"
         assert result["errors"][1]["message"] == "'columns' attribute missing"
-        assert psv.validated_content is None
 
     @pytest.mark.parametrize("data_type", SUPPORTED_DATA_TYPES)
     def test_missing_fields_in_columns(self, data_type: str):
@@ -160,14 +161,13 @@ class TestPydanticValidationErrors:
             ],
         }
         psv = PydanticSchemaValidator(Config())
-        result = psv.validate(inp)
+        result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 2
         assert result["errors"][0]["error_at"] == "$.columns[0]"
         assert result["errors"][0]["message"] == "'type' attribute missing"
         assert result["errors"][1]["error_at"] == "$.columns[1].name"
         assert result["errors"][1]["message"] == "'name' attribute missing"
-        assert psv.validated_content is None
 
     @pytest.mark.parametrize("value", [[], {}, 1, 0.2, "invalid_type"])
     def test_invalid_data_type(self, value):
@@ -183,7 +183,7 @@ class TestPydanticValidationErrors:
             ],
         }
         psv = PydanticSchemaValidator(Config())
-        result = psv.validate(inp)
+        result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 1
         assert result["errors"][0]["error_at"] == "$.columns[0].type"
@@ -191,7 +191,6 @@ class TestPydanticValidationErrors:
             result["errors"][0]["message"]
             == "'type' expected to be one of ['string', 'integer', 'float', 'boolean', 'date', 'datetime']"
         )
-        assert psv.validated_content is None
 
     @pytest.mark.parametrize("value", [{}, 100, 0.2, "some_string"])
     def test_invalid_column_type(self, value):
@@ -202,23 +201,21 @@ class TestPydanticValidationErrors:
             "columns": value,
         }
         psv = PydanticSchemaValidator(Config())
-        result = psv.validate(inp)
+        result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 1
         assert result["errors"][0]["error_at"] == "$.columns"
         assert result["errors"][0]["message"] == "'columns' expected to be 'list' type"
-        assert psv.validated_content is None
 
     @pytest.mark.parametrize("value", [[], 100, 0.2, "some_string"])
     def test_invalid_json_root(self, value):
         inp = value
         psv = PydanticSchemaValidator(Config())
-        result = psv.validate(inp)
+        result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 1
         assert result["errors"][0]["error_at"] == "$"
         assert result["errors"][0]["message"] == "'$' expected to be 'object' type"
-        assert psv.validated_content is None
 
     @pytest.mark.parametrize("value", [{}, [], 100, 0.2])
     def test_invalid_column_type_in_root(self, value):
@@ -229,12 +226,11 @@ class TestPydanticValidationErrors:
             "columns": [],
         }
         psv = PydanticSchemaValidator(Config())
-        result = psv.validate(inp)
+        result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 1
         assert result["errors"][0]["error_at"] == "$.fqn"
         assert result["errors"][0]["message"] == "'fqn' expected to be 'string' type"
-        assert psv.validated_content is None
 
     @pytest.mark.parametrize("value", [[], {}, 100, 0.2])
     def test_invalid_column_type_in_columns_for_string(self, value):
@@ -261,7 +257,7 @@ class TestPydanticValidationErrors:
             ],
         }
         psv = PydanticSchemaValidator(Config())
-        result = psv.validate(inp)
+        result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 3
         assert result["errors"][0]["error_at"] == "$.columns[0].pattern"
@@ -272,7 +268,6 @@ class TestPydanticValidationErrors:
         assert result["errors"][1]["message"] == "'format' expected to be 'string' type"
         assert result["errors"][2]["error_at"] == "$.columns[2].format"
         assert result["errors"][2]["message"] == "'format' expected to be 'string' type"
-        assert psv.validated_content is None
 
     @pytest.mark.parametrize("value", [[], {}, 0.2, "some_string"])
     def test_invalid_column_type_in_columns_for_integer(self, value):
@@ -302,7 +297,7 @@ class TestPydanticValidationErrors:
         }
 
         psv = PydanticSchemaValidator(Config())
-        result = psv.validate(inp)
+        result = psv.validate(inp, "")
 
         assert result["valid"] is False
         assert result["error_count"] == 5
@@ -321,7 +316,6 @@ class TestPydanticValidationErrors:
         assert result["errors"][3]["message"] == "'maximum' expected to be 'int' type"
         assert result["errors"][4]["error_at"] == "$.columns[2].precision"
         assert result["errors"][4]["message"] == "'precision' expected to be 'int' type"
-        assert psv.validated_content is None
 
     @pytest.mark.parametrize("value", [[], {}, "some_string"])
     def test_invalid_column_type_in_columns_for_float(self, value):
@@ -340,7 +334,7 @@ class TestPydanticValidationErrors:
         }
 
         psv = PydanticSchemaValidator(Config())
-        result = psv.validate(inp)
+        result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 2
 
@@ -348,4 +342,69 @@ class TestPydanticValidationErrors:
         assert result["errors"][0]["message"] == "'minimum' expected to be 'float' type"
         assert result["errors"][1]["error_at"] == "$.columns[0].maximum"
         assert result["errors"][1]["message"] == "'maximum' expected to be 'float' type"
-        assert psv.validated_content is None
+
+
+class TestUniqueFQNValidatorErrors:
+    def test_unique_fqn_ok(self):
+        ufv = UniqueFQNValidator(Config())
+        inputs = [
+            {
+                "name": "Test Dataset",
+                "fqn": f"com.example.TestDataset{i}",
+                "description": "This dataset has extra fields not defined in the schema.",
+                "columns": [],
+            }
+            for i in range(5)
+        ]
+        for inp in inputs:
+            result = ufv.validate(inp, "")
+
+            assert result["valid"] is True
+            assert result["error_count"] == 0
+
+    def test_duplicate_fqn(self):
+        ufv = UniqueFQNValidator(Config())
+        inputs = [
+            {
+                "name": "Test Dataset",
+                "fqn": "com.example.TestDataset",
+                "description": "This dataset has extra fields not defined in the schema.",
+                "columns": [],
+            },
+            {
+                "name": "Test Dataset",
+                "fqn": "com.example.TestDataset",
+                "description": "This dataset has extra fields not defined in the schema.",
+                "columns": [],
+            },
+        ]
+        result1 = ufv.validate(inputs[0], "")
+        assert result1["valid"] is True
+        assert result1["error_count"] == 0
+
+        result2 = ufv.validate(inputs[1], "")
+        assert result2["valid"] is False
+        assert result2["error_count"] == 1
+        assert result2["errors"][0]["error_at"] == "$.fqn"
+        assert (
+            result2["errors"][0]["message"]
+            == "Duplicate FQN 'com.example.TestDataset', already present at ''"
+        )
+
+    def test_missing_fqn(self):
+        ufv = UniqueFQNValidator(Config())
+        inputs = [
+            {
+                "name": "Test Dataset",
+                "description": "This dataset has extra fields not defined in the schema.",
+                "columns": [],
+            },
+        ]
+        result = ufv.validate(inputs[0], "")
+        assert result["valid"] is False
+        assert result["error_count"] == 1
+        assert result["errors"][0]["error_at"] == "$.fqn"
+        assert (
+            result["errors"][0]["message"]
+            == "Duplicate fqn check is enabled but fqn field is missing"
+        )

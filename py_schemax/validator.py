@@ -23,11 +23,6 @@ class Validator(ABC):
     ) -> ValidationOutputSchema:  # pragma: no cover
         pass
 
-    @property
-    @abstractmethod
-    def validated_content(self) -> dict | None:  # pragma: no cover
-        pass
-
 
 class FileValidator(Validator):
     def __init__(self, config: Config):
@@ -102,15 +97,14 @@ class FileValidator(Validator):
 class PydanticSchemaValidator(Validator):
     def __init__(self, config: Config):
         self.config: Config = config
-        self.__validated_content: dict | None = None
 
-    def validate(self, data: dict) -> ValidationOutputSchema:
+    def validate(self, data: dict, file_path: str) -> ValidationOutputSchema:
         try:
             DatasetSchema.model_validate(data)
             self.__validated_content = data
         except ValidationError as e:
             return {
-                "file_path": "",
+                "file_path": file_path,
                 "valid": False,
                 "errors": [
                     {
@@ -123,7 +117,7 @@ class PydanticSchemaValidator(Validator):
                 ],
                 "error_count": len(e.errors()),
             }
-        return {"file_path": "", "valid": True, "errors": [], "error_count": 0}
+        return {"file_path": file_path, "valid": True, "errors": [], "error_count": 0}
 
     def __strip_details(self, error: ErrorDetails) -> PydanticErrorSchema:
         """Strip details from the error for JSON serialization."""
@@ -182,7 +176,45 @@ class PydanticSchemaValidator(Validator):
 
         return error_string
 
-    @property
-    def validated_content(self) -> dict | None:
-        """Return the validated content of the file."""
-        return self.__validated_content
+
+class UniqueFQNValidator(Validator):
+    def __init__(self, config: Config):
+        self.config: Config = config
+        self.__fqn_to_file_map: dict[str, str] = {}
+
+    def validate(self, data: dict, file_path: str) -> ValidationOutputSchema:
+        """Validate the uniqueness of FQNs across multiple validation outputs."""
+        current_fqn: str | None = data.get("fqn")
+
+        if current_fqn is None:
+            return {
+                "file_path": file_path,
+                "valid": False,
+                "errors": [
+                    {
+                        "type": "missing_fqn",
+                        "error_at": "$.fqn",
+                        "message": "Duplicate fqn check is enabled but fqn field is missing",
+                        "pydantic_error": None,
+                    }
+                ],
+                "error_count": 1,
+            }
+
+        if current_fqn in self.__fqn_to_file_map:
+            return {
+                "file_path": file_path,
+                "valid": False,
+                "errors": [
+                    {
+                        "type": "duplicate_fqn",
+                        "error_at": "$.fqn",
+                        "message": f"Duplicate FQN '{current_fqn}', already present at '{self.__fqn_to_file_map[current_fqn]}'",
+                        "pydantic_error": None,
+                    }
+                ],
+                "error_count": 1,
+            }
+        self.__fqn_to_file_map[current_fqn] = file_path
+
+        return {"file_path": file_path, "valid": True, "errors": [], "error_count": 0}
