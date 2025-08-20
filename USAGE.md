@@ -11,14 +11,40 @@ uv tool install git+https://github.com/gauthamchettiar/py-schemax.git
 # Validate files
 schemax validate schema.json              # Single file
 schemax validate *.json *.yaml            # Multiple files
-ls schemas/ | schemax validate             # From pipe
+# Validate files matching a pattern
+ls *_schema.* | schemax validate
+```
+
+### Unique FQN Validation
+
+When validating multiple files, py-schemax automatically checks for duplicate FQN (Fully Qualified Name) values across all files in a single validation run:
+
+```bash
+# These files would cause a FQN conflict:
+# schema1.json: {"name": "Users", "fqn": "com.example.users", "columns": [...]}
+# schema2.yaml: {"name": "Customers", "fqn": "com.example.users", "columns": [...]}
+
+schemax validate schema1.json schema2.yaml
+# Output:
+# ✅ schema1.json
+# ❌ schema2.yaml
+#   Error at $.fqn: Duplicate FQN 'com.example.users', already present at 'schema1.json'
+
+# To disable unique FQN validation:
+schemax validate --rule-ignore PSX_VAL2 schema1.json schema2.yaml
+# Output:
+# ✅ schema1.json
+# ✅ schema2.yaml  (FQN conflict ignored)
+
+# To only run unique FQN validation (skip schema validation):
+schemax validate --rule-apply PSX_VAL2 schema1.json schema2.yaml
 
 # Common options
 schemax validate --verbose schema.json    # Show all results
 schemax validate --json schema.json       # JSON output
 schemax validate --fail-fast *.json       # Stop on first error
 schemax validate --rule-apply PSX_VAL1 schema.json  # Apply only specific rules
-schemax validate --rule-ignore PSX_VAL1 schema.json # Ignore specific rules
+schemax validate --rule-ignore PSX_VAL2 schema.json # Ignore specific rules
 ```
 
 ## Configuration
@@ -49,7 +75,7 @@ export SCHEMAX_VALIDATE_FAIL_MODE="never"
 | Output Format | `--json`, `--out` | `SCHEMAX_VALIDATE_OUTPUT_FORMAT` | `output_format` | `json`, `text` | `text` |
 | Verbosity | `--verbose`, `--silent` | `SCHEMAX_VALIDATE_OUTPUT_LEVEL` | `output_level` | `silent`, `quiet`, `verbose` | `quiet` |
 | Failure Mode | `--fail-fast`, `--fail-never` | `SCHEMAX_VALIDATE_FAIL_MODE` | `fail_mode` | `fast`, `never`, `after` | `after` |
-| Rule Control | `--rule-apply`, `--rule-ignore` | - | - | `PSX_VAL1` | All rules applied |
+| Rule Control | `--rule-apply`, `--rule-ignore` | - | - | `PSX_VAL1`, `PSX_VAL2` | All rules applied |
 
 ## Schema File Format
 
@@ -288,6 +314,7 @@ py-schemax uses a modular validation system with different rule sets that can be
 | Rule ID | Description |
 |---------|-------------|
 | `PSX_VAL1` | **Pydantic Schema Validation** - Validates schema structure, data types, constraints, and required fields according to the defined Pydantic models |
+| `PSX_VAL2` | **Unique FQN Validation** - Ensures that Fully Qualified Names (FQNs) are unique across all validated schema files within a single validation run |
 
 #### Rule Control Options
 
@@ -301,8 +328,8 @@ schemax validate --rule-ignore PSX_VAL1 schema.json
 # Skips Pydantic validation (currently would only validate file format)
 
 # Combine multiple rules (when more rules are available)
-schemax validate --rule-apply PSX_VAL1 --rule-apply CUSTOM_RULE schema.json
-schemax validate --rule-ignore PSX_VAL1 --rule-ignore CUSTOM_RULE schema.json
+schemax validate --rule-apply PSX_VAL1 --rule-apply PSX_VAL2 schema.json
+schemax validate --rule-ignore PSX_VAL1 --rule-ignore PSX_VAL2 schema.json
 
 # Rule precedence: --rule-apply takes precedence over defaults
 # If --rule-apply is specified, only those rules are applied
@@ -314,15 +341,23 @@ schemax validate --rule-ignore PSX_VAL1 --rule-ignore CUSTOM_RULE schema.json
 ```bash
 # Default behavior (all rules applied)
 schemax validate schema.json
-# Runs: File format validation + PSX_VAL1 (Pydantic validation)
+# Runs: File format validation + PSX_VAL1 (Pydantic validation) + PSX_VAL2 (Unique FQN validation)
 
 # Apply only schema validation
 schemax validate --rule-apply PSX_VAL1 schema.json
 # Runs: File format validation + PSX_VAL1 only
 
-# Skip schema validation (validate only file format)
+# Apply only unique FQN validation
+schemax validate --rule-apply PSX_VAL2 schema.json
+# Runs: File format validation + PSX_VAL2 only
+
+# Skip schema validation (validate only file format and unique FQN)
 schemax validate --rule-ignore PSX_VAL1 schema.json
-# Runs: File format validation only (checks JSON/YAML syntax)
+# Runs: File format validation + PSX_VAL2 only
+
+# Skip unique FQN validation (validate only file format and schema)
+schemax validate --rule-ignore PSX_VAL2 schema.json
+# Runs: File format validation + PSX_VAL1 only
 ```
 
 **Note**: File format validation (JSON/YAML parsing) always runs first regardless of rule settings. Rule control applies to the schema validation layer.
@@ -431,6 +466,25 @@ schemax validate incomplete_schema.json
 
 **Solution:** Add all required fields (`name`, `fqn`, `columns`).
 
+#### Duplicate FQN Errors
+```bash
+schemax validate schema1.json schema2.json
+# ✅ schema1.json
+# ❌ schema2.json
+#   Error at $.fqn: Duplicate FQN 'com.example.dataset', already present at 'schema1.json'
+```
+
+**Solution:** Ensure each schema file has a unique `fqn` value across all files being validated in a single run.
+
+#### Missing FQN for Unique Validation
+```bash
+schemax validate --rule-apply PSX_VAL2 incomplete_schema.json
+# ❌ incomplete_schema.json
+#   Error at $.fqn: Duplicate fqn check is enabled but fqn field is missing
+```
+
+**Solution:** When using unique FQN validation (PSX_VAL2), ensure all schema files have an `fqn` field defined.
+
 ### Performance Tips
 
 #### Large File Sets
@@ -474,5 +528,5 @@ schemax validate --json problematic_schema.json | jq '.'
 | `schemax validate --silent file.json` | No output, only exit codes |
 | `schemax validate --config custom.toml *.json` | Use custom config file |
 | `schemax validate --rule-apply PSX_VAL1 file.json` | Apply only specific validation rules |
-| `schemax validate --rule-ignore PSX_VAL1 file.json` | Ignore specific validation rules |
+| `schemax validate --rule-ignore PSX_VAL2 file.json` | Ignore specific validation rules |
 | `find . -name "*.json" \| schemax validate` | Validate files from pipe |
