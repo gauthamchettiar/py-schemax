@@ -1,5 +1,6 @@
 name: valid_dependency_b
 fqn: com.example.ValidDependencyB
 description: This is a valid dependency schema B.
+columns: []
 depends_on:
   - tests/fixtures/dependent_schemas/valid_dependency_c.yaml
