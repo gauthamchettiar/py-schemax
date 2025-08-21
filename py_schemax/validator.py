@@ -1,3 +1,4 @@
+import graphlib
 import json
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -10,7 +11,6 @@ from pydantic_core import ErrorDetails
 from py_schemax.config import Config
 from py_schemax.schema.dataset import SUPPORTED_DATA_TYPES, DatasetSchema
 from py_schemax.schema.validation import PydanticErrorSchema, ValidationOutputSchema
-from py_schemax.utils import merge_validation_outputs
 
 
 class Validator(ABC):
@@ -101,7 +101,6 @@ class PydanticSchemaValidator(Validator):
     def validate(self, data: dict, file_path: str) -> ValidationOutputSchema:
         try:
             DatasetSchema.model_validate(data)
-            self.__validated_content = data
         except ValidationError as e:
             return {
                 "file_path": file_path,
@@ -186,7 +185,7 @@ class UniqueFQNValidator(Validator):
         """Validate the uniqueness of FQNs across multiple validation outputs."""
         current_fqn: str | None = data.get("fqn")
 
-        if current_fqn is None:
+        if current_fqn is None or not isinstance(current_fqn, str):
             return {
                 "file_path": file_path,
                 "valid": False,
@@ -194,7 +193,7 @@ class UniqueFQNValidator(Validator):
                     {
                         "type": "missing_fqn",
                         "error_at": "$.fqn",
-                        "message": "Duplicate fqn check is enabled but fqn field is missing",
+                        "message": "Duplicate fqn check is enabled but fqn field is missing or invalid",
                         "pydantic_error": None,
                     }
                 ],
@@ -218,3 +217,120 @@ class UniqueFQNValidator(Validator):
         self.__fqn_to_file_map[current_fqn] = file_path
 
         return {"file_path": file_path, "valid": True, "errors": [], "error_count": 0}
+
+
+class DependencyValidator(Validator):
+    def __init__(self, config: Config):
+        self.config: Config = config
+        self.__sorted_graph: dict[str, list[str]] = {}
+
+    def _validate_field_type(
+        self, name: str, value: Any
+    ) -> ValidationOutputSchema | None:
+        if not isinstance(value, list):
+            return {
+                "file_path": "",
+                "valid": False,
+                "errors": [
+                    {
+                        "type": "invalid_type",
+                        "error_at": f"$.{name}",
+                        "message": f"'{name}' must be a list",
+                        "pydantic_error": None,
+                    }
+                ],
+                "error_count": 1,
+            }
+        elif not all(isinstance(item, str) for item in value):
+            return {
+                "file_path": "",
+                "valid": False,
+                "errors": [
+                    {
+                        "type": "invalid_type",
+                        "error_at": f"$.{name}",
+                        "message": f"'{name}' must be a list of strings",
+                        "pydantic_error": None,
+                    }
+                ],
+                "error_count": 1,
+            }
+
+        return None
+
+    def _add_dependency(self, file_path: str, dependencies: list[str]) -> None:
+        self.__sorted_graph[file_path] = dependencies
+
+    def _validate_circular_dependency(self, name: str) -> ValidationOutputSchema | None:
+        try:
+            graphlib.TopologicalSorter(self.__sorted_graph).prepare()
+        except graphlib.CycleError as cycle_error:
+            return {
+                "file_path": "",
+                "valid": False,
+                "errors": [
+                    {
+                        "type": "circular_dependency_detected",
+                        "error_at": f"$.{name}",
+                        "message": f"circular dependency present: {cycle_error}",
+                        "pydantic_error": None,
+                    }
+                ],
+                "error_count": 1,
+            }
+        return None
+
+    def _validate_for(
+        self, field_name: str, data: dict, file_path: str
+    ) -> ValidationOutputSchema:
+        depends_on = data.get(field_name, [])
+
+        if (error := self._validate_field_type(field_name, depends_on)) is not None:
+            return error
+
+        for dep in depends_on:
+            if not Path(dep).exists():
+                return {
+                    "file_path": file_path,
+                    "valid": False,
+                    "errors": [
+                        {
+                            "type": "dependent_file_not_found",
+                            "error_at": f"$.{field_name}",
+                            "message": f"File '{dep}' provided in '{field_name}' field not found",
+                            "pydantic_error": None,
+                        }
+                    ],
+                    "error_count": 1,
+                }
+
+        self._add_dependency(file_path, depends_on)
+
+        if (error := self._validate_circular_dependency(field_name)) is not None:
+            return error
+
+        return {"file_path": file_path, "valid": True, "errors": [], "error_count": 0}
+
+    @abstractmethod
+    def validate(
+        self, data: dict, file_path: str
+    ) -> ValidationOutputSchema:  # pragma: no cover
+        """Validate schema dependencies."""
+        pass
+
+
+class DependsOnSchemaValidator(DependencyValidator):
+    def __init__(self, config: Config):
+        super().__init__(config)
+
+    def validate(self, data: dict, file_path: str) -> ValidationOutputSchema:
+        """Validate schema dependencies."""
+        return self._validate_for("depends_on", data, file_path)
+
+
+class DependentsSchemaValidator(DependencyValidator):
+    def __init__(self, config: Config):
+        super().__init__(config)
+
+    def validate(self, data: dict, file_path: str) -> ValidationOutputSchema:
+        return self._validate_for("dependents", data, file_path)

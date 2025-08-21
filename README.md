@@ -1,6 +1,6 @@
 # 📋 py-schemax
 
-![license MIT](https://img.shields.io/badge/license-MIT-blue) [![codecov](https://codecov.io/gh/gauthamchettiar/py-schemax/branch/main/graph/badge.svg)](https://codecov.io/gh/gauthamchettiar/py-schemax) ![python3.10](https://img.shields.io/badge/python->=3.10-green)
+![license MIT](https://img.shields.io/badge/license-MIT-blue) [![codecov](https://codecov.io/gh/gauthamchettiar/py-schemax/branch/main/graph/badge.svg)](https://codecov.io/gh/gauthamchettiar/py-schemax) ![python3.10](https://img.shields.io/badge/python->=3.11-green)
 
 A powerful CLI tool for validating, managing, and maintaining data schema definitions using [Pydantic](https://github.com/pydantic/pydantic) models. This tool helps ensure your data schema files (JSON/YAML) conform to a standardized structure with comprehensive validation rules.
 

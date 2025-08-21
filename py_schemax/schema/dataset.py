@@ -157,3 +157,11 @@ class DatasetSchema(BaseModel):
         default=None,
         description="List of tags or keywords associated with the dataset for easier categorization and searchability",
     )
+    depends_on: Optional[List[str]] = Field(
+        default=None,
+        description="List of file paths that this dataset depends on",
+    )
+    dependents: Optional[List[str]] = Field(
+        default=None,
+        description="List of file paths that depend on this dataset",
+    )

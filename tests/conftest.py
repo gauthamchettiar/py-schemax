@@ -24,6 +24,25 @@ def invalid_schemas_dir(fixtures_dir) -> Path:
 
 
 @pytest.fixture
+def dependent_schemas_dir(fixtures_dir) -> Path:
+    """Return the path to the dependent schemas fixtures directory."""
+    return fixtures_dir / "dependent_schemas"
+
+
+@pytest.fixture
+def dependent_schemas(dependent_schemas_dir) -> dict[str, Path]:
+    """Return the path to the dependent schemas fixtures directory."""
+    return {
+        "valid_dependency_a": dependent_schemas_dir / "valid_dependency_a.yaml",
+        "valid_dependency_b": dependent_schemas_dir / "valid_dependency_b.yaml",
+        "valid_dependency_c": dependent_schemas_dir / "valid_dependency_c.yaml",
+        "invalid_dependency_a": dependent_schemas_dir / "invalid_dependency_a.yaml",
+        "invalid_dependency_b": dependent_schemas_dir / "invalid_dependency_b.yaml",
+        "invalid_dependency_c": dependent_schemas_dir / "invalid_dependency_c.yaml",
+    }
+
+
+@pytest.fixture
 def valid_schemas(valid_schemas_dir) -> dict[str, Path]:
     """Return the path to a simple valid YAML schema file."""
     return {
@@ -66,6 +85,8 @@ def dataset_with_optional_fields(dataset_with_reqd_fields):
         "description": "This is a test dataset schema",
         "tags": ["test", "example"],
         "metadata": {"source": "Generated for testing", "frequency": "daily"},
+        "depends_on": ["abc"],
+        "dependents": ["def"],
     }
 
 

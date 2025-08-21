@@ -902,7 +902,7 @@ class TestUniqueFQNValidation:
         args = [
             str(valid_schemas["valid_simple_schema"]),
             str(valid_schemas["valid_simple_schema"]),
-        ] + ["--verbose"]
+        ] + ["--verbose", "--rule-apply", "PSX_VAL2"]
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format=output_format)
         )
@@ -913,4 +913,44 @@ class TestUniqueFQNValidation:
             expected_exit_code=1,
             expected_ok_count=1,
             expected_error_count=1,
+        )
+
+
+class TestDependenciesValidation:
+    @pytest.mark.parametrize("output_format", ["text", "json"])
+    def test_dependencies_validation_depends_on(self, dependent_schemas, output_format):
+        runner = CliRunner()
+        args = [str(ds) for ds in dependent_schemas.values()] + [
+            "--verbose",
+            "--rule-apply",
+            "PSX_VAL3",
+        ]
+        result = runner.invoke(
+            validate, _with_output_format_option(args, output_format=output_format)
+        )
+        _validate_stdout(
+            result,
+            output_format=output_format,
+            expected_exit_code=1,
+            expected_ok_count=5,
+            expected_error_count=1,
+        )
+
+    @pytest.mark.parametrize("output_format", ["text", "json"])
+    def test_dependencies_validation_dependents(self, dependent_schemas, output_format):
+        runner = CliRunner()
+        args = [str(ds) for ds in dependent_schemas.values()] + [
+            "--verbose",
+            "--rule-apply",
+            "PSX_VAL4",
+        ]
+        result = runner.invoke(
+            validate, _with_output_format_option(args, output_format=output_format)
+        )
+        _validate_stdout(
+            result,
+            output_format=output_format,
+            expected_exit_code=1,
+            expected_ok_count=4,
+            expected_error_count=2,
         )
