@@ -16,7 +16,7 @@ Other similar alternatives,
 
 - **Extensible Schema Validation**: Validate JSON and YAML schema files against robust Pydantic models. Easily extend validation rules by updating model attributes—no complex configuration required.
 - **Unique FQN Validation**: Automatically detect and prevent duplicate Fully Qualified Names (FQNs) across multiple schema files in a single validation run.
-- **Modular Rule System**: Apply or ignore specific validation rules (`PSX_VAL1` for schema validation, `PSX_VAL2` for unique FQN validation) using CLI flags for flexible validation workflows.
+- **Modular Rule System**: Apply or ignore specific validation rules (`RV_SCHEMA` for schema validation, `RV_UNIQUE_FQN` for unique FQN validation) using CLI flags for flexible validation workflows.
 - **Clear, Structured Error Reporting**: Detailed error messages with precise [JSONPath](https://jsonpath.com/) style locations and readable formatting make troubleshooting straightforward.
 - **Flexible CLI Output & Controls**: Choose between text or JSON output, adjust verbosity, and control exit codes for seamless integration with CI/CD workflows.
 - **Multiple Configuration Options**: Support for configuration files (INI/TOML), environment variables, and command-line flags with clear precedence rules.
@@ -52,8 +52,8 @@ schemax validate --config my-config.toml schema.json    # Custom config file
 SCHEMAX_VALIDATE_OUTPUT_FORMAT=json schemax validate schema.json  # Environment variable
 
 # Control validation rules
-schemax validate --rule-apply PSX_VAL1 schema.json     # Only schema validation
-schemax validate --rule-ignore PSX_VAL2 schema.json    # Skip unique FQN validation
+schemax validate --rule-apply RV_SCHEMA schema.json     # Only schema validation
+schemax validate --rule-ignore RV_UNIQUE_FQN schema.json    # Skip unique FQN validation
 
 # See sample configuration files in the repository:
 # - sample.schemax.toml, sample.pyproject.toml, sample.env.sh
