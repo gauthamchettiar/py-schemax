@@ -9,7 +9,8 @@ from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
 from py_schemax.config import Config
-from py_schemax.schema.dataset import SUPPORTED_DATA_TYPES, DatasetSchema
+from py_schemax.model import SupportedDataTypes, get_dynamic_dataset_schema
+from py_schemax.schema.models import DatasetSchema
 from py_schemax.schema.validation import PydanticErrorSchema, ValidationOutputSchema
 
 
@@ -97,10 +98,11 @@ class FileValidator(Validator):
 class PydanticSchemaValidator(Validator):
     def __init__(self, config: Config):
         self.config: Config = config
+        self.dataset_schema: type[DatasetSchema] = get_dynamic_dataset_schema(config)
 
     def validate(self, data: dict, file_path: str) -> ValidationOutputSchema:
         try:
-            DatasetSchema.model_validate(data)
+            self.dataset_schema.model_validate(data)
         except ValidationError as e:
             return {
                 "file_path": file_path,
@@ -132,7 +134,7 @@ class PydanticSchemaValidator(Validator):
             if isinstance(loc_item, int):
                 error_string += f"[{loc_item}]"
             elif isinstance(loc_item, str):
-                if loc_item not in SUPPORTED_DATA_TYPES:
+                if loc_item not in [dt.name for dt in SupportedDataTypes]:
                     error_string += f".{loc_item}"
         if error["type"] == "union_tag_invalid":
             discriminator = error.get("ctx", {}).get("discriminator", "").strip("'")
@@ -145,7 +147,9 @@ class PydanticSchemaValidator(Validator):
         loc_length = len(loc)
         match error["type"]:
             case "extra_forbidden":
-                if loc_length > 1 and (loc_minus_2 := loc[-2]) in SUPPORTED_DATA_TYPES:
+                if loc_length > 1 and (loc_minus_2 := loc[-2]) in [
+                    dt.name for dt in SupportedDataTypes
+                ]:
                     error_string = (
                         f"'{loc[-1]}' invalid attribute for '{loc_minus_2}' type"
                     )

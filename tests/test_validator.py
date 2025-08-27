@@ -1,7 +1,7 @@
 import pytest
 
 from py_schemax.config import Config
-from py_schemax.schema.dataset import SUPPORTED_DATA_TYPES
+from py_schemax.model import SupportedDataTypes
 from py_schemax.validator import (
     DependentsSchemaValidator,
     DependsOnSchemaValidator,
@@ -109,7 +109,7 @@ class TestPydanticValidationErrors:
             == "invalid attribute 'extra_field2' provided"
         )
 
-    @pytest.mark.parametrize("data_type", SUPPORTED_DATA_TYPES)
+    @pytest.mark.parametrize("data_type", SupportedDataTypes.__members__.keys())
     def test_extra_fields_in_columns(self, data_type: str):
         inp = {
             "name": "Test Dataset",
@@ -138,7 +138,9 @@ class TestPydanticValidationErrors:
             "name": "Test Dataset",
             "description": "This dataset is missing required fields.",
         }
-        psv = PydanticSchemaValidator(Config())
+        psv = PydanticSchemaValidator(
+            Config(model_required_attributes=["fqn", "columns"])
+        )
         result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 2
@@ -147,7 +149,7 @@ class TestPydanticValidationErrors:
         assert result["errors"][1]["error_at"] == "$.columns"
         assert result["errors"][1]["message"] == "'columns' attribute missing"
 
-    @pytest.mark.parametrize("data_type", SUPPORTED_DATA_TYPES)
+    @pytest.mark.parametrize("data_type", SupportedDataTypes.__members__.keys())
     def test_missing_fields_in_columns(self, data_type: str):
         inp = {
             "name": "Test Dataset",
@@ -162,7 +164,9 @@ class TestPydanticValidationErrors:
                 },
             ],
         }
-        psv = PydanticSchemaValidator(Config())
+        psv = PydanticSchemaValidator(
+            Config(column_required_attributes={data_type: ["name", "type"]})
+        )
         result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 2

@@ -56,8 +56,6 @@ def invalid_schemas(invalid_schemas_dir) -> dict[str, Path]:
     """Return the path to a complex YAML schema file."""
     return {
         "invalid_columns": invalid_schemas_dir / "invalid_columns.yaml",
-        "invalid_missing_columns": invalid_schemas_dir / "invalid_missing_columns.yaml",
-        "invalid_missing_name": invalid_schemas_dir / "invalid_missing_name.json",
         "invalid_types": invalid_schemas_dir / "invalid_types.json",
         "invalid_unsupported_format": invalid_schemas_dir
         / "invalid_unsupported_format.txt",

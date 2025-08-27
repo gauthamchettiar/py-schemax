@@ -2,39 +2,22 @@ from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Discriminator, Field
 
-# Constants for runtime use
-DT_STRING = "string"
-DT_INTEGER = "integer"
-DT_FLOAT = "float"
-DT_BOOLEAN = "boolean"
-DT_DATE = "date"
-DT_DATETIME = "datetime"
-
-SUPPORTED_DATA_TYPES = [
-    DT_STRING,
-    DT_INTEGER,
-    DT_FLOAT,
-    DT_BOOLEAN,
-    DT_DATE,
-    DT_DATETIME,
-]
-
 
 class BaseDataType(BaseModel):
     model_config = {"extra": "forbid"}  # Reject extra fields
 
-    name: str = Field(
-        ..., description="Unique identifier for the column within the dataset"
+    name: Optional[str] = Field(
+        default=None, description="Unique identifier for the column within the dataset"
     )
-    unique: bool = Field(
+    unique: Optional[bool] = Field(
         default=False,
         description="Whether the column values must be unique across all rows in the dataset",
     )
-    primary_key: bool = Field(
+    primary_key: Optional[bool] = Field(
         default=False,
         description="Whether this column serves as the primary key for the dataset, uniquely identifying each row",
     )
-    nullable: bool = Field(
+    nullable: Optional[bool] = Field(
         default=True,
         description="Whether the column can contain null/None values. Set to False for required fields",
     )
@@ -101,7 +84,7 @@ class DateType(BaseDataType):
         description="Data type identifier for date-only columns (no time component)"
     )
     format: Optional[str] = Field(
-        default="YYYY-MM-DD",
+        default=None,
         description="Expected date format string using standard date format tokens",
     )
 
@@ -111,7 +94,7 @@ class DateTimeType(BaseDataType):
         description="Data type identifier for date and time columns with full timestamp support"
     )
     format: Optional[str] = Field(
-        default="YYYY-MM-DD HH:MM:SS",
+        default=None,
         description="Expected datetime format string using standard datetime format tokens",
     )
     timezone: Optional[str] = Field(
@@ -129,24 +112,24 @@ DataTypeUnion = Annotated[
 class DatasetSchema(BaseModel):
     model_config = {"extra": "forbid"}  # Reject extra fields
 
-    fqn: str = Field(
-        ...,
+    fqn: Optional[str] = Field(
+        default=None,
         description="Fully qualified name of the dataset schema, typically in the format 'namespace.dataset_name'",
     )
-    name: str = Field(
-        ...,
+    name: Optional[str] = Field(
+        default=None,
         description="Name identifying this dataset schema for reference and documentation purposes",
     )
     description: Optional[str] = Field(
         default=None,
         description="Comprehensive description of the dataset's purpose, content, and intended use cases",
     )
-    version: str = Field(
-        default="1.0",
+    version: Optional[str] = Field(
+        default=None,
         description="Schema version following semantic versioning to track schema evolution and compatibility",
     )
-    columns: List[DataTypeUnion] = Field(
-        ...,
+    columns: Optional[List[DataTypeUnion]] = Field(
+        default=None,
         description="Complete list of column definitions that make up the dataset structure, each with its own validation rules",
     )
     metadata: Optional[Dict[str, Any]] = Field(

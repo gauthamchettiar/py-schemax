@@ -1,5 +1,0 @@
-name: "Missing Columns"
-fqn: "tests.fixtures.invalid_schemas.invalid_missing_columns"
-description: "Schema missing required columns field"
-version: "1.0"
-# Missing columns field

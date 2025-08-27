@@ -15,13 +15,13 @@ from py_schemax.validator import (
 
 
 class ValidationRuleSetEnum(Enum):
-    PSX_VAL1 = PydanticSchemaValidator
-    PSX_VAL2 = UniqueFQNValidator
-    PSX_VAL3 = DependsOnSchemaValidator
-    PSX_VAL4 = DependentsSchemaValidator
+    RV_SCHEMA = PydanticSchemaValidator
+    RV_UNIQUE_FQN = UniqueFQNValidator
+    RV_DEPENDS_ON = DependsOnSchemaValidator
+    RV_DEPENDENTS = DependentsSchemaValidator
 
 
-DEFAULT_RULESETS = (ValidationRuleSetEnum.PSX_VAL1,)
+DEFAULT_RULESETS = (ValidationRuleSetEnum.RV_SCHEMA,)
 
 
 class RuleSetBasedValidation:

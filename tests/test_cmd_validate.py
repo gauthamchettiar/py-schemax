@@ -10,7 +10,7 @@ from py_schemax.cli import validate
 from py_schemax.config import DEFAULT_CONFIG_FILES
 
 _VALID_FILE_COUNT = 2
-_INVALID_FILE_COUNT = 8
+_INVALID_FILE_COUNT = 6
 
 
 def _validate_text_stdout(
@@ -824,23 +824,62 @@ class TestConfigOverrides:
 
 
 class TestRulesetApplication:
-    def test_apply_specific_rules(self, invalid_schemas):
+    @pytest.mark.parametrize("output_format", ["text", "json"])
+    def test_apply_specific_rules(
+        self, valid_schemas, invalid_schemas, dependent_schemas, output_format
+    ):
         runner = CliRunner()
-        args = [str(invalid_schemas["invalid_columns"])] + [
+        args = [
+            str(valid_schemas["valid_simple_schema"]),
+            str(valid_schemas["valid_simple_schema"]),
+            str(invalid_schemas["invalid_columns"]),
+            str(dependent_schemas["invalid_dependency_a"]),
+            str(dependent_schemas["invalid_dependency_b"]),
+            str(dependent_schemas["invalid_dependency_c"]),
+        ] + [
             "--rule-apply",
-            "PSX_VAL1",
+            "RV_SCHEMA",
+            "--rule-apply",
+            "RV_UNIQUE_FQN",
+            "--verbose",
+            "--rule-apply",
+            "RV_DEPENDS_ON",
         ]
-        result = runner.invoke(validate, args)
-        assert result.exit_code == 1
+        result = runner.invoke(
+            validate, _with_output_format_option(args, output_format=output_format)
+        )
+
+        _validate_stdout(
+            result,
+            output_format=output_format,
+            expected_exit_code=1,
+            expected_ok_count=3,
+            expected_error_count=3,
+        )
 
     def test_ignore_specific_rules(self, invalid_schemas):
         runner = CliRunner()
         args = [str(invalid_schemas["invalid_columns"])] + [
             "--rule-ignore",
-            "PSX_VAL1",
+            "RV_SCHEMA",
         ]
         result = runner.invoke(validate, args)
         assert result.exit_code == 0
+
+    def test_apply_ignore_specific_rules(self, valid_schemas, invalid_schemas):
+        runner = CliRunner()
+        args = [
+            str(invalid_schemas["invalid_columns"]),
+            str(valid_schemas["valid_simple_schema"]),
+            str(valid_schemas["valid_simple_schema"]),
+        ] + ["--rule-apply", "RV_SCHEMA", "--rule-ignore", "RV_UNIQUE_FQN", "--verbose"]
+        result = runner.invoke(validate, args)
+        _validate_text_stdout(
+            result,
+            expected_exit_code=1,
+            expected_ok_count=2,
+            expected_error_count=1,
+        )
 
     def test_apply_from_envvars(self, invalid_schemas):
         runner = CliRunner()
@@ -849,7 +888,7 @@ class TestRulesetApplication:
             validate,
             args,
             env={
-                "SCHEMAX_VALIDATE_RULE_APPLY": "PSX_VAL1",
+                "SCHEMAX_VALIDATE_RULE_APPLY": "RV_SCHEMA",
             },
         )
         assert result.exit_code == 1
@@ -861,7 +900,7 @@ class TestRulesetApplication:
             validate,
             args,
             env={
-                "SCHEMAX_VALIDATE_RULE_IGNORE": "PSX_VAL1",
+                "SCHEMAX_VALIDATE_RULE_IGNORE": "RV_SCHEMA",
             },
         )
         assert result.exit_code == 0
@@ -870,7 +909,7 @@ class TestRulesetApplication:
         _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
-            f.write('rule_apply = ["PSX_VAL1"]\n')
+            f.write('rule_apply = ["RV_SCHEMA"]\n')
 
         runner = CliRunner()
         args = [str(invalid_schemas["invalid_columns"])] + [
@@ -884,7 +923,7 @@ class TestRulesetApplication:
         _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
         with open(temp_file_path, "w") as f:
             f.write("[schemax.validate]\n")
-            f.write('rule_ignore = ["PSX_VAL1"]\n')
+            f.write('rule_ignore = ["RV_SCHEMA"]\n')
 
         runner = CliRunner()
         args = [str(invalid_schemas["invalid_columns"])] + [
@@ -902,7 +941,7 @@ class TestUniqueFQNValidation:
         args = [
             str(valid_schemas["valid_simple_schema"]),
             str(valid_schemas["valid_simple_schema"]),
-        ] + ["--verbose", "--rule-apply", "PSX_VAL2"]
+        ] + ["--verbose", "--rule-apply", "RV_UNIQUE_FQN"]
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format=output_format)
         )
@@ -923,7 +962,7 @@ class TestDependenciesValidation:
         args = [str(ds) for ds in dependent_schemas.values()] + [
             "--verbose",
             "--rule-apply",
-            "PSX_VAL3",
+            "RV_DEPENDS_ON",
         ]
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format=output_format)
@@ -942,7 +981,7 @@ class TestDependenciesValidation:
         args = [str(ds) for ds in dependent_schemas.values()] + [
             "--verbose",
             "--rule-apply",
-            "PSX_VAL4",
+            "RV_DEPENDENTS",
         ]
         result = runner.invoke(
             validate, _with_output_format_option(args, output_format=output_format)
