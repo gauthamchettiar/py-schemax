@@ -155,7 +155,9 @@ def main() -> None:
     help="Ignore validation rules, only specified rules will be ignored",
     envvar="SCHEMAX_VALIDATE_RULE_IGNORE",
 )
+@click.pass_context
 def validate(
+    ctx: click.Context,
     file_paths: List[str],
     output_format: str,
     use_json: bool,
@@ -219,15 +221,19 @@ def validate(
       SCHEMAX_VALIDATE_FAIL_MODE        Set default failure mode (fail_fast|fail_never|fail_after)
     """
     file_paths = accept_file_paths_as_stdin(file_paths)
-    config = Config()
-    config.set_output_format(output_format=output_format, use_json=use_json)
-    config.set_output_level(
+
+    default_map = ctx.default_map or {}
+    config = Config(
+        output_format=output_format,
+        use_json=use_json,
         output_level=output_level,
         output_level_verbose=output_level_verbose,
         output_level_silent=output_level_silent,
-    )
-    config.set_fail_mode(
-        fail_mode=fail_mode, fail_fast=fail_fast, fail_never=fail_never
+        fail_mode=fail_mode,
+        fail_fast=fail_fast,
+        fail_never=fail_never,
+        model_required_attributes=default_map.get("model_required_attributes"),
+        column_required_attributes=default_map.get("column_required_attributes"),
     )
 
     output = Output(config=config)

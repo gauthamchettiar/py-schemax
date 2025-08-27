@@ -1,0 +1,7 @@
+name: valid_dependency_a
+fqn: com.example.ValidDependencyA
+description: This is a valid dependency schema A.
+columns: []
+depends_on:
+  - tests/fixtures/dependent_schemas/valid_dependency_b.yaml
+  - tests/fixtures/dependent_schemas/valid_dependency_c.yaml

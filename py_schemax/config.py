@@ -1,7 +1,7 @@
 import tomllib
 from enum import Enum
 from pathlib import Path
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, TypedDict, Unpack
 
 
 class OutputFormatEnum(Enum):
@@ -24,6 +24,44 @@ class FailModeEnum(Enum):
 DEFAULT_CONFIG_FILES = ["schemax.toml", "pyproject.toml"]
 
 
+class _OutputFormatKwargs(TypedDict, total=False):
+    """Type hints for output format configuration parameters."""
+
+    output_format: str | None
+    use_json: bool | None
+
+
+class _OutputLevelKwargs(TypedDict, total=False):
+    """Type hints for output level configuration parameters."""
+
+    output_level: str | None
+    output_level_verbose: bool | None
+    output_level_silent: bool | None
+
+
+class _FailModeKwargs(TypedDict, total=False):
+    """Type hints for fail mode configuration parameters."""
+
+    fail_mode: str | None
+    fail_fast: bool | None
+    fail_never: bool | None
+
+
+class _RequiredAttributesKwargs(TypedDict, total=False):
+    """Type hints for required attributes configuration parameters."""
+
+    model_required_attributes: list[str] | None
+    column_required_attributes: dict[str, list[str]] | None
+
+
+class _ConfigKwargs(
+    _OutputFormatKwargs, _OutputLevelKwargs, _FailModeKwargs, _RequiredAttributesKwargs
+):
+    """Complete type hints for all configuration parameters."""
+
+    pass
+
+
 class DefaultConfig:
     """Default configuration values for py-schemax."""
 
@@ -35,20 +73,44 @@ class DefaultConfig:
 class Config:
     """Configuration manager for py-schemax CLI options."""
 
-    def __init__(self) -> None:
-        """Initialize configuration with default values."""
-        self.reset()
+    def __init__(self, **kwargs: Unpack[_ConfigKwargs]) -> None:
+        """Initialize configuration with provided values or defaults.
+
+        Args:
+            **kwargs: Configuration parameters. See ConfigKwargs for supported options.
+        """
+        self._set_all_config(**kwargs)
 
     def reset(self) -> None:
         """Reset all configuration to default values."""
-        self.__output_format = DefaultConfig.output_format
-        self.__output_level = DefaultConfig.output_level
-        self.__fail_mode = DefaultConfig.fail_mode
+        self._set_all_config()
 
-    def set_output_format(
-        self, output_format: str | None = None, use_json: bool | None = None
-    ) -> None:
+    def _set_all_config(self, **kwargs: Unpack[_ConfigKwargs]) -> None:
+        """Set all configuration options from keyword arguments."""
+        # Extract parameters for each setter using type-safe approach
+        output_format_params = {
+            k: v for k, v in kwargs.items() if k in _OutputFormatKwargs.__annotations__
+        }
+        output_level_params = {
+            k: v for k, v in kwargs.items() if k in _OutputLevelKwargs.__annotations__
+        }
+        fail_mode_params = {
+            k: v for k, v in kwargs.items() if k in _FailModeKwargs.__annotations__
+        }
+
+        self.set_output_format(**output_format_params)  # type: ignore[arg-type]
+        self.set_output_level(**output_level_params)  # type: ignore[arg-type]
+        self.set_fail_mode(**fail_mode_params)  # type: ignore[arg-type]
+        self.set_required_attributes(
+            kwargs.get("model_required_attributes") or [],
+            kwargs.get("column_required_attributes") or {},
+        )
+
+    def set_output_format(self, **kwargs: Unpack[_OutputFormatKwargs]) -> None:
         """Set the output format based on CLI flags."""
+        output_format = kwargs.get("output_format")
+        use_json = kwargs.get("use_json")
+
         # Set output format based on flags
         if use_json:
             self.__output_format = OutputFormatEnum.JSON
@@ -57,13 +119,12 @@ class Config:
         else:
             self.__output_format = DefaultConfig.output_format
 
-    def set_output_level(
-        self,
-        output_level: str | None = None,
-        output_level_verbose: bool | None = None,
-        output_level_silent: bool | None = None,
-    ) -> None:
+    def set_output_level(self, **kwargs: Unpack[_OutputLevelKwargs]) -> None:
         """Set the output level based on CLI flags (in priority order)."""
+        output_level = kwargs.get("output_level")
+        output_level_verbose = kwargs.get("output_level_verbose")
+        output_level_silent = kwargs.get("output_level_silent")
+
         if output_level_silent:
             self.__output_level = OutputLevelEnum.SILENT
         elif output_level_verbose:
@@ -73,13 +134,12 @@ class Config:
         else:
             self.__output_level = DefaultConfig.output_level
 
-    def set_fail_mode(
-        self,
-        fail_mode: str | None = None,
-        fail_fast: bool | None = None,
-        fail_never: bool | None = None,
-    ) -> None:
+    def set_fail_mode(self, **kwargs: Unpack[_FailModeKwargs]) -> None:
         """Set the failure mode based on CLI flags."""
+        fail_mode = kwargs.get("fail_mode")
+        fail_fast = kwargs.get("fail_fast")
+        fail_never = kwargs.get("fail_never")
+
         if fail_fast:
             self.__fail_mode = FailModeEnum.FAST
         elif fail_never:
@@ -88,6 +148,15 @@ class Config:
             self.__fail_mode = FailModeEnum(fail_mode)
         else:
             self.__fail_mode = DefaultConfig.fail_mode
+
+    def set_required_attributes(
+        self,
+        model_required_attributes: list[str],
+        column_required_attributes: dict[str, list[str]],
+    ) -> None:
+        """Set the required attributes."""
+        self.__enforce_model_required_attributes = model_required_attributes
+        self.__enforce_column_required_attributes = column_required_attributes
 
     @property
     def output_format(self) -> OutputFormatEnum:
@@ -103,6 +172,16 @@ class Config:
     def fail_mode(self) -> FailModeEnum:
         """Get the current failure mode."""
         return self.__fail_mode
+
+    @property
+    def model_required_attributes(self) -> list[str]:
+        """Get the list of required attributes."""
+        return self.__enforce_model_required_attributes
+
+    @property
+    def column_required_attributes(self) -> dict[str, list[str]]:
+        """Get the list of required column attributes."""
+        return self.__enforce_column_required_attributes
 
 
 def parse_config_files(

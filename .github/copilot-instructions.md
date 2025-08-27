@@ -122,8 +122,8 @@ py_schemax/
   - `RuleSetBasedValidation`: Main validation orchestrator class
   - `DEFAULT_RULESETS`: Default set of rules applied when no specific rules are specified
 - **Available Rules**:
-  - `PSX_VAL1` (`PydanticSchemaValidator`): Core schema validation using Pydantic models
-  - `PSX_VAL2` (`UniqueFQNValidator`): Cross-file FQN uniqueness validation
+  - `RV_SCHEMA` (`PydanticSchemaValidator`): Core schema validation using Pydantic models
+  - `RV_UNIQUE_FQN` (`UniqueFQNValidator`): Cross-file FQN uniqueness validation
 - **Rule Control**: CLI flags `--rule-apply` and `--rule-ignore` for selective rule execution
 - **Validation Flow**: File format validation always runs first, followed by selected schema validation rules
 

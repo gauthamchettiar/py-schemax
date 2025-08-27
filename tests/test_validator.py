@@ -1,8 +1,10 @@
 import pytest
 
 from py_schemax.config import Config
-from py_schemax.schema.dataset import SUPPORTED_DATA_TYPES
+from py_schemax.model import SupportedDataTypes
 from py_schemax.validator import (
+    DependentsSchemaValidator,
+    DependsOnSchemaValidator,
     FileValidator,
     PydanticSchemaValidator,
     UniqueFQNValidator,
@@ -107,7 +109,7 @@ class TestPydanticValidationErrors:
             == "invalid attribute 'extra_field2' provided"
         )
 
-    @pytest.mark.parametrize("data_type", SUPPORTED_DATA_TYPES)
+    @pytest.mark.parametrize("data_type", SupportedDataTypes.__members__.keys())
     def test_extra_fields_in_columns(self, data_type: str):
         inp = {
             "name": "Test Dataset",
@@ -136,7 +138,9 @@ class TestPydanticValidationErrors:
             "name": "Test Dataset",
             "description": "This dataset is missing required fields.",
         }
-        psv = PydanticSchemaValidator(Config())
+        psv = PydanticSchemaValidator(
+            Config(model_required_attributes=["fqn", "columns"])
+        )
         result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 2
@@ -145,7 +149,7 @@ class TestPydanticValidationErrors:
         assert result["errors"][1]["error_at"] == "$.columns"
         assert result["errors"][1]["message"] == "'columns' attribute missing"
 
-    @pytest.mark.parametrize("data_type", SUPPORTED_DATA_TYPES)
+    @pytest.mark.parametrize("data_type", SupportedDataTypes.__members__.keys())
     def test_missing_fields_in_columns(self, data_type: str):
         inp = {
             "name": "Test Dataset",
@@ -160,7 +164,9 @@ class TestPydanticValidationErrors:
                 },
             ],
         }
-        psv = PydanticSchemaValidator(Config())
+        psv = PydanticSchemaValidator(
+            Config(column_required_attributes={data_type: ["name", "type"]})
+        )
         result = psv.validate(inp, "")
         assert result["valid"] is False
         assert result["error_count"] == 2
@@ -406,5 +412,137 @@ class TestUniqueFQNValidatorErrors:
         assert result["errors"][0]["error_at"] == "$.fqn"
         assert (
             result["errors"][0]["message"]
-            == "Duplicate fqn check is enabled but fqn field is missing"
+            == "Duplicate fqn check is enabled but fqn field is missing or invalid"
         )
+
+
+class TestDependencyValidator:
+    def test_valid_dependency_depends_on(self, dependent_schemas):
+        fv = FileValidator(Config())
+        dv = DependsOnSchemaValidator(Config())
+
+        for schema_file in [
+            dependent_schemas["valid_dependency_a"],
+            dependent_schemas["valid_dependency_b"],
+            dependent_schemas["valid_dependency_c"],
+        ]:
+            fv.validate(str(schema_file))
+            assert fv.validated_content is not None
+
+            result = dv.validate(fv.validated_content, str(schema_file))
+            assert result["valid"] is True
+
+    def test_invalid_circular_dependency_depends_on(self, dependent_schemas):
+        fv = FileValidator(Config())
+        dv = DependsOnSchemaValidator(Config())
+
+        fv.validate(str(dependent_schemas["invalid_dependency_a"]))
+        assert fv.validated_content is not None
+        result = dv.validate(
+            fv.validated_content, str(dependent_schemas["invalid_dependency_a"])
+        )
+        assert result["valid"] is True
+
+        fv.validate(str(dependent_schemas["invalid_dependency_b"]))
+        assert fv.validated_content is not None
+        result = dv.validate(
+            fv.validated_content, str(dependent_schemas["invalid_dependency_b"])
+        )
+        assert result["valid"] is True
+
+        fv.validate(str(dependent_schemas["invalid_dependency_c"]))
+        assert fv.validated_content is not None
+        result = dv.validate(
+            fv.validated_content, str(dependent_schemas["invalid_dependency_c"])
+        )
+        assert result["valid"] is False
+        assert result["errors"][0]["type"] == "circular_dependency_detected"
+
+    def test_valid_dependency_dependents(self, dependent_schemas):
+        fv = FileValidator(Config())
+        dv = DependentsSchemaValidator(Config())
+
+        for schema_file in [
+            dependent_schemas["valid_dependency_a"],
+            dependent_schemas["valid_dependency_b"],
+            dependent_schemas["valid_dependency_c"],
+        ]:
+            fv.validate(str(schema_file))
+            assert fv.validated_content is not None
+
+            result = dv.validate(fv.validated_content, str(schema_file))
+            assert result["valid"] is True
+
+    def test_invalid_circular_dependency_dependents(self, dependent_schemas):
+        fv = FileValidator(Config())
+        dv = DependentsSchemaValidator(Config())
+
+        fv.validate(str(dependent_schemas["invalid_dependency_a"]))
+        assert fv.validated_content is not None
+        result = dv.validate(
+            fv.validated_content, str(dependent_schemas["invalid_dependency_a"])
+        )
+        assert result["valid"] is True
+
+        fv.validate(str(dependent_schemas["invalid_dependency_b"]))
+        assert fv.validated_content is not None
+        result = dv.validate(
+            fv.validated_content, str(dependent_schemas["invalid_dependency_b"])
+        )
+        assert result["valid"] is False
+
+    def test_invalid_file_not_present(self):
+        input = {
+            "name": "Invalid Dependency",
+            "description": "This is an invalid dependency schema.",
+            "depends_on": [
+                "tests/fixtures/dependent_schemas/valid_dependency_b.yaml",
+                "non_existent_file.yaml",
+            ],
+            "dependents": [
+                "tests/fixtures/dependent_schemas/valid_dependency_c.yaml",
+                "non_existent_file.yaml",
+            ],
+        }
+        dv1 = DependsOnSchemaValidator(Config())
+        result = dv1.validate(input, "")
+        assert result["valid"] is False
+        assert result["errors"][0]["type"] == "dependent_file_not_found"
+
+        dv2 = DependentsSchemaValidator(Config())
+        result = dv2.validate(input, "")
+        assert result["valid"] is False
+        assert result["errors"][0]["type"] == "dependent_file_not_found"
+
+    def test_invalid_field(self):
+        inputs = [
+            {
+                "name": "Invalid Field",
+                "depends_on": "tests/fixtures/dependent_schemas/valid_dependency_b.yaml",
+                "dependents": [
+                    1,
+                    "tests/fixtures/dependent_schemas/valid_dependency_b.yaml",
+                ],
+            },
+            {
+                "name": "Invalid Field 2",
+                "depends_on": [
+                    ["tests/fixtures/dependent_schemas/valid_dependency_b.yaml"]
+                ],
+                "dependents": [
+                    1,
+                    "tests/fixtures/dependent_schemas/valid_dependency_b.yaml",
+                ],
+            },
+        ]
+        dv1 = DependsOnSchemaValidator(Config())
+        for input in inputs:
+            result = dv1.validate(input, "")
+            assert result["valid"] is False
+            assert result["errors"][0]["type"] == "invalid_type"
+
+        dv2 = DependentsSchemaValidator(Config())
+        for input in inputs:
+            result = dv2.validate(input, "")
+            assert result["valid"] is False
+            assert result["errors"][0]["type"] == "invalid_type"

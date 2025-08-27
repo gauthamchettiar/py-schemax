@@ -1,0 +1,9 @@
+name: invalid_dependency_b
+fqn: com.example.InvalidDependencyB
+description: This is an invalid dependency schema B.
+columns: []
+depends_on:
+  - tests/fixtures/dependent_schemas/valid_dependency_a.yaml
+  - tests/fixtures/dependent_schemas/invalid_dependency_c.yaml
+dependents:
+  - tests/fixtures/dependent_schemas/invalid_dependency_a.yaml

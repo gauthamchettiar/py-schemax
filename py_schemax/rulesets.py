@@ -6,6 +6,8 @@ from py_schemax.config import Config
 from py_schemax.schema.validation import ValidationOutputSchema
 from py_schemax.utils import merge_validation_outputs
 from py_schemax.validator import (
+    DependentsSchemaValidator,
+    DependsOnSchemaValidator,
     FileValidator,
     PydanticSchemaValidator,
     UniqueFQNValidator,
@@ -13,11 +15,13 @@ from py_schemax.validator import (
 
 
 class ValidationRuleSetEnum(Enum):
-    PSX_VAL1 = PydanticSchemaValidator
-    PSX_VAL2 = UniqueFQNValidator
+    RV_SCHEMA = PydanticSchemaValidator
+    RV_UNIQUE_FQN = UniqueFQNValidator
+    RV_DEPENDS_ON = DependsOnSchemaValidator
+    RV_DEPENDENTS = DependentsSchemaValidator
 
 
-DEFAULT_RULESETS = (ValidationRuleSetEnum.PSX_VAL1, ValidationRuleSetEnum.PSX_VAL2)
+DEFAULT_RULESETS = (ValidationRuleSetEnum.RV_SCHEMA,)
 
 
 class RuleSetBasedValidation:
@@ -43,24 +47,3 @@ class RuleSetBasedValidation:
                 return merge_validation_outputs(file_validator_output, validator_output)
 
         return file_validator_output
-
-
-# def validate_file_by_ruleset(
-#     config: Config,
-#     file_path: str | Path,
-#     apply_rules: list[ValidationRuleSetEnum],
-# ) -> ValidationOutputSchema:
-#     """Validate a file using the appropriate validator based on its extension."""
-#     file_validator = FileValidator(config)
-#     if (file_validator_output := file_validator.validate(file_path)).get(
-#         "valid", False
-#     ) is False:
-#         return file_validator_output
-#     for rule in apply_rules:
-#         validator = rule.value(config)
-#         if (
-#             validator_output := validator.validate(file_validator.validated_content or {}, str(file_path))
-#         ).get("valid", False) is False:
-#             return merge_validation_outputs(file_validator_output, validator_output)
-
-#     return file_validator_output

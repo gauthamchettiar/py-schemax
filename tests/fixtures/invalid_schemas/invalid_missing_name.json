@@ -1,9 +1,0 @@
-{
-  "fqn": "tests.fixtures.invalid_schemas.invalid_missing_name",
-  "columns": [
-    {
-      "name": "test_field",
-      "type": "string"
-    }
-  ]
-}

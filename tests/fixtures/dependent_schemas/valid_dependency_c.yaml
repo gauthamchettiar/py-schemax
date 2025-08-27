@@ -1,0 +1,4 @@
+name: valid_dependency_c
+fqn: com.example.ValidDependencyC
+description: This is a valid dependency schema C.
+columns: []

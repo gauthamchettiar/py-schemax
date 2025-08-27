@@ -1,6 +1,6 @@
 import pytest
 
-from py_schemax.schema.dataset import DatasetSchema, DataTypeUnion
+from py_schemax.schema.models import DatasetSchema, DataTypeUnion
 
 
 def test_dataset_schema_with_required_fields_only(dataset_with_reqd_fields):
@@ -17,6 +17,8 @@ def test_dataset_schema_with_required_fields_only(dataset_with_reqd_fields):
     assert dataset_schema.description is None
     assert dataset_schema.tags is None
     assert dataset_schema.metadata is None
+    assert dataset_schema.depends_on is None
+    assert dataset_schema.dependents is None
 
 
 def test_dataset_schema_with_optional_fields(dataset_with_optional_fields):
@@ -36,18 +38,21 @@ def test_dataset_schema_with_optional_fields(dataset_with_optional_fields):
         "source": "Generated for testing",
         "frequency": "daily",
     }
+    assert dataset_schema.depends_on == ["abc"]
+    assert dataset_schema.dependents == ["def"]
 
 
 def test_dataset_schema_model_dump_field_count(dataset_with_optional_fields):
     """Test that model_dump() returns expected number of fields."""
     dataset_schema = DatasetSchema(**dataset_with_optional_fields)
     # any extra fields added to schema must be added to test, otherwise below assertion will fail
-    assert len(dataset_schema.model_dump()) == 7
+    assert len(dataset_schema.model_dump()) == 9
 
 
 def test_string_column_type(dataset_with_columns):
     """Test string column type validation and properties."""
     dataset_schema = DatasetSchema(**dataset_with_columns)
+    assert dataset_schema.columns is not None
     string_column = dataset_schema.columns[0]
 
     assert string_column.name == "column1"
@@ -60,6 +65,7 @@ def test_string_column_type(dataset_with_columns):
 def test_integer_column_type(dataset_with_columns):
     """Test integer column type validation and properties."""
     dataset_schema = DatasetSchema(**dataset_with_columns)
+    assert dataset_schema.columns is not None
     integer_column = dataset_schema.columns[1]
 
     assert integer_column.name == "column2"
@@ -71,6 +77,7 @@ def test_integer_column_type(dataset_with_columns):
 def test_float_column_type(dataset_with_columns):
     """Test float column type validation and properties."""
     dataset_schema = DatasetSchema(**dataset_with_columns)
+    assert dataset_schema.columns is not None
     float_column = dataset_schema.columns[2]
 
     assert float_column.name == "column3"
@@ -83,6 +90,7 @@ def test_float_column_type(dataset_with_columns):
 def test_boolean_column_type(dataset_with_columns):
     """Test boolean column type validation and properties."""
     dataset_schema = DatasetSchema(**dataset_with_columns)
+    assert dataset_schema.columns is not None
     boolean_column = dataset_schema.columns[3]
 
     assert boolean_column.name == "column4"
@@ -92,6 +100,7 @@ def test_boolean_column_type(dataset_with_columns):
 def test_date_column_type(dataset_with_columns):
     """Test date column type validation and properties."""
     dataset_schema = DatasetSchema(**dataset_with_columns)
+    assert dataset_schema.columns is not None
     date_column = dataset_schema.columns[4]
 
     assert date_column.name == "column5"
@@ -102,6 +111,7 @@ def test_date_column_type(dataset_with_columns):
 def test_datetime_column_type(dataset_with_columns):
     """Test datetime column type validation and properties."""
     dataset_schema = DatasetSchema(**dataset_with_columns)
+    assert dataset_schema.columns is not None
     datetime_column = dataset_schema.columns[5]
 
     assert datetime_column.name == "column6"
@@ -114,6 +124,7 @@ def test_column_common_default_properties(dataset_with_columns):
     """Test that all columns have correct default values for common properties."""
     dataset_schema = DatasetSchema(**dataset_with_columns)
 
+    assert dataset_schema.columns is not None
     for column in dataset_schema.columns:
         assert column.unique is False
         assert column.nullable is True
@@ -125,6 +136,7 @@ def test_column_count_and_types(dataset_with_columns):
     """Test that the correct number and types of columns are present."""
     dataset_schema = DatasetSchema(**dataset_with_columns)
 
+    assert dataset_schema.columns is not None
     assert len(dataset_schema.columns) == 6
 
     column_types = [column.type for column in dataset_schema.columns]
@@ -139,6 +151,7 @@ def test_column_model_dump_field_counts(dataset_with_columns):
         5  # name, type, unique, nullable, primary_key, description
     )
 
+    assert dataset_schema.columns is not None
     # String type: common fields + max_length, min_length, pattern, type = 5 + 4 = 9
     assert dataset_schema.columns[0].type == "string"
     assert len(dataset_schema.columns[0].model_dump()) == common_column_fields_count + 4

@@ -31,20 +31,20 @@ schemax validate schema1.json schema2.yaml
 #   Error at $.fqn: Duplicate FQN 'com.example.users', already present at 'schema1.json'
 
 # To disable unique FQN validation:
-schemax validate --rule-ignore PSX_VAL2 schema1.json schema2.yaml
+schemax validate --rule-ignore RV_UNIQUE_FQN schema1.json schema2.yaml
 # Output:
 # ✅ schema1.json
 # ✅ schema2.yaml  (FQN conflict ignored)
 
 # To only run unique FQN validation (skip schema validation):
-schemax validate --rule-apply PSX_VAL2 schema1.json schema2.yaml
+schemax validate --rule-apply RV_UNIQUE_FQN schema1.json schema2.yaml
 
 # Common options
 schemax validate --verbose schema.json    # Show all results
 schemax validate --json schema.json       # JSON output
 schemax validate --fail-fast *.json       # Stop on first error
-schemax validate --rule-apply PSX_VAL1 schema.json  # Apply only specific rules
-schemax validate --rule-ignore PSX_VAL2 schema.json # Ignore specific rules
+schemax validate --rule-apply RV_SCHEMA schema.json  # Apply only specific rules
+schemax validate --rule-ignore RV_UNIQUE_FQN schema.json # Ignore specific rules
 ```
 
 ## Configuration
@@ -75,7 +75,7 @@ export SCHEMAX_VALIDATE_FAIL_MODE="never"
 | Output Format | `--json`, `--out` | `SCHEMAX_VALIDATE_OUTPUT_FORMAT` | `output_format` | `json`, `text` | `text` |
 | Verbosity | `--verbose`, `--silent` | `SCHEMAX_VALIDATE_OUTPUT_LEVEL` | `output_level` | `silent`, `quiet`, `verbose` | `quiet` |
 | Failure Mode | `--fail-fast`, `--fail-never` | `SCHEMAX_VALIDATE_FAIL_MODE` | `fail_mode` | `fast`, `never`, `after` | `after` |
-| Rule Control | `--rule-apply`, `--rule-ignore` | - | - | `PSX_VAL1`, `PSX_VAL2` | All rules applied |
+| Rule Control | `--rule-apply`, `--rule-ignore` | - | - | `RV_SCHEMA`, `RV_UNIQUE_FQN` | All rules applied |
 
 ## Schema File Format
 
@@ -313,23 +313,23 @@ py-schemax uses a modular validation system with different rule sets that can be
 
 | Rule ID | Description |
 |---------|-------------|
-| `PSX_VAL1` | **Pydantic Schema Validation** - Validates schema structure, data types, constraints, and required fields according to the defined Pydantic models |
-| `PSX_VAL2` | **Unique FQN Validation** - Ensures that Fully Qualified Names (FQNs) are unique across all validated schema files within a single validation run |
+| `RV_SCHEMA` | **Pydantic Schema Validation** - Validates schema structure, data types, constraints, and required fields according to the defined Pydantic models |
+| `RV_UNIQUE_FQN` | **Unique FQN Validation** - Ensures that Fully Qualified Names (FQNs) are unique across all validated schema files within a single validation run |
 
 #### Rule Control Options
 
 ```bash
 # Apply only specific rules (ignores default rule set)
-schemax validate --rule-apply PSX_VAL1 schema.json
+schemax validate --rule-apply RV_SCHEMA schema.json
 # Only runs Pydantic schema validation
 
 # Ignore specific rules (applies all other rules)
-schemax validate --rule-ignore PSX_VAL1 schema.json
+schemax validate --rule-ignore RV_SCHEMA schema.json
 # Skips Pydantic validation (currently would only validate file format)
 
 # Combine multiple rules (when more rules are available)
-schemax validate --rule-apply PSX_VAL1 --rule-apply PSX_VAL2 schema.json
-schemax validate --rule-ignore PSX_VAL1 --rule-ignore PSX_VAL2 schema.json
+schemax validate --rule-apply RV_SCHEMA --rule-apply RV_UNIQUE_FQN schema.json
+schemax validate --rule-ignore RV_SCHEMA --rule-ignore RV_UNIQUE_FQN schema.json
 
 # Rule precedence: --rule-apply takes precedence over defaults
 # If --rule-apply is specified, only those rules are applied
@@ -341,23 +341,23 @@ schemax validate --rule-ignore PSX_VAL1 --rule-ignore PSX_VAL2 schema.json
 ```bash
 # Default behavior (all rules applied)
 schemax validate schema.json
-# Runs: File format validation + PSX_VAL1 (Pydantic validation) + PSX_VAL2 (Unique FQN validation)
+# Runs: File format validation + RV_SCHEMA (Pydantic validation) + RV_UNIQUE_FQN (Unique FQN validation)
 
 # Apply only schema validation
-schemax validate --rule-apply PSX_VAL1 schema.json
-# Runs: File format validation + PSX_VAL1 only
+schemax validate --rule-apply RV_SCHEMA schema.json
+# Runs: File format validation + RV_SCHEMA only
 
 # Apply only unique FQN validation
-schemax validate --rule-apply PSX_VAL2 schema.json
-# Runs: File format validation + PSX_VAL2 only
+schemax validate --rule-apply RV_UNIQUE_FQN schema.json
+# Runs: File format validation + RV_UNIQUE_FQN only
 
 # Skip schema validation (validate only file format and unique FQN)
-schemax validate --rule-ignore PSX_VAL1 schema.json
-# Runs: File format validation + PSX_VAL2 only
+schemax validate --rule-ignore RV_SCHEMA schema.json
+# Runs: File format validation + RV_UNIQUE_FQN only
 
 # Skip unique FQN validation (validate only file format and schema)
-schemax validate --rule-ignore PSX_VAL2 schema.json
-# Runs: File format validation + PSX_VAL1 only
+schemax validate --rule-ignore RV_UNIQUE_FQN schema.json
+# Runs: File format validation + RV_SCHEMA only
 ```
 
 **Note**: File format validation (JSON/YAML parsing) always runs first regardless of rule settings. Rule control applies to the schema validation layer.
@@ -379,13 +379,13 @@ export SCHEMAX_VALIDATE_OUTPUT_FORMAT="text"
 schemax validate --json schema.json  # Uses JSON despite env var
 
 # Selective rule application with output control
-schemax validate --rule-apply PSX_VAL1 --json --verbose *.json
+schemax validate --rule-apply RV_SCHEMA --json --verbose *.json
 
 # Skip specific rules with fail-fast behavior
-schemax validate --rule-ignore PSX_VAL1 --fail-fast schemas/*.yaml
+schemax validate --rule-ignore RV_SCHEMA --fail-fast schemas/*.yaml
 
 # Complex combination: JSON output, verbose mode, custom rules, never fail
-schemax validate --json --verbose --rule-apply PSX_VAL1 --fail-never schemas/
+schemax validate --json --verbose --rule-apply RV_SCHEMA --fail-never schemas/
 ```
 
 ## Integration with CI/CD
@@ -478,12 +478,12 @@ schemax validate schema1.json schema2.json
 
 #### Missing FQN for Unique Validation
 ```bash
-schemax validate --rule-apply PSX_VAL2 incomplete_schema.json
+schemax validate --rule-apply RV_UNIQUE_FQN incomplete_schema.json
 # ❌ incomplete_schema.json
 #   Error at $.fqn: Duplicate fqn check is enabled but fqn field is missing
 ```
 
-**Solution:** When using unique FQN validation (PSX_VAL2), ensure all schema files have an `fqn` field defined.
+**Solution:** When using unique FQN validation (RV_UNIQUE_FQN), ensure all schema files have an `fqn` field defined.
 
 ### Performance Tips
 
@@ -527,6 +527,6 @@ schemax validate --json problematic_schema.json | jq '.'
 | `schemax validate --fail-never *.yaml` | Never exit with error code |
 | `schemax validate --silent file.json` | No output, only exit codes |
 | `schemax validate --config custom.toml *.json` | Use custom config file |
-| `schemax validate --rule-apply PSX_VAL1 file.json` | Apply only specific validation rules |
-| `schemax validate --rule-ignore PSX_VAL2 file.json` | Ignore specific validation rules |
+| `schemax validate --rule-apply RV_SCHEMA file.json` | Apply only specific validation rules |
+| `schemax validate --rule-ignore RV_UNIQUE_FQN file.json` | Ignore specific validation rules |
 | `find . -name "*.json" \| schemax validate` | Validate files from pipe |
