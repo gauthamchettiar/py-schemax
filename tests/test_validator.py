@@ -496,7 +496,7 @@ class TestDependencyValidator:
             "name": "Invalid Dependency",
             "description": "This is an invalid dependency schema.",
             "depends_on": [
-                "tests/fixtures/dependent_schemas/valid_dependency_b.yaml"
+                "tests/fixtures/dependent_schemas/valid_dependency_b.yaml",
                 "non_existent_file.yaml",
             ],
             "dependents": [
