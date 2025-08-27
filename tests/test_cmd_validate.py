@@ -993,3 +993,67 @@ class TestDependenciesValidation:
             expected_ok_count=4,
             expected_error_count=2,
         )
+
+
+class TestRequiredAttributes:
+    def test_model_required_attribute(self):
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
+        with open(temp_file_path, "w") as f:
+            f.write("[schemax.validate]\n")
+            f.write('model_required_attributes = ["name", "fqn", "description"]\n')
+
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open("invalid_schema.json", "w") as f:
+                json.dump(
+                    {
+                        "name": "InvalidSchema",
+                        "fqn": "com.example.InvalidSchema",
+                        "columns": [],
+                    },
+                    f,
+                )
+
+            args = ["invalid_schema.json", "--config", temp_file_path, "--verbose"]
+            result = runner.invoke(validate, args)
+            _validate_text_stdout(
+                result,
+                expected_exit_code=1,
+                expected_ok_count=0,
+                expected_error_count=1,
+            )
+
+    def test_column_required_attribute(self):
+        _, temp_file_path = tempfile.mkstemp(suffix="sample_config.toml")
+        with open(temp_file_path, "w") as f:
+            f.write("[schemax.validate]\n")
+            f.write('column_required_attributes.integer = [ "minimum" ]\n')
+            f.write('column_required_attributes.string = [ "max_length" ]\n')
+
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open("invalid_schema.json", "w") as f:
+                json.dump(
+                    {
+                        "name": "InvalidSchema",
+                        "fqn": "com.example.InvalidSchema",
+                        "columns": [
+                            {"name": "id", "type": "integer"},
+                            {
+                                "name": "value",
+                                "type": "string",
+                                "description": "A value",
+                            },
+                        ],
+                    },
+                    f,
+                )
+
+            args = ["invalid_schema.json", "--config", temp_file_path, "--verbose"]
+            result = runner.invoke(validate, args)
+            _validate_text_stdout(
+                result,
+                expected_exit_code=1,
+                expected_ok_count=0,
+                expected_error_count=1,
+            )
