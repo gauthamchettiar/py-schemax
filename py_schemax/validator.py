@@ -24,6 +24,57 @@ class Validator(ABC):
     ) -> ValidationOutputSchema:  # pragma: no cover
         pass
 
+    def pre_validate_all(self, *args: Any, **kwargs: Any) -> None:
+        """Run before all validation checks are run on all files.
+
+        This method is called once per validator before any files are validated.
+        Override this method to perform setup operations that need to happen
+        before validation begins.
+
+        Args:
+            *args: Variable length argument list
+            **kwargs: Arbitrary keyword arguments
+        """
+        pass
+
+    def post_validate_all(self, *args: Any, **kwargs: Any) -> None:
+        """Run after all validation checks are run on all files.
+
+        This method is called once per validator after all files have been validated.
+        Override this method to perform cleanup operations or final processing.
+
+        Args:
+            *args: Variable length argument list
+            **kwargs: Arbitrary keyword arguments, including:
+                - exit_code: Final exit code indicating validation success/failure
+        """
+        pass
+
+    def pre_validate(self, *args: Any, **kwargs: Any) -> None:
+        """Run before validation checks are run on a file.
+
+        This method is called once per file per validator before the validate method.
+        Override this method to perform per-file setup operations.
+
+        Args:
+            *args: Same arguments as passed to validate method
+            **kwargs: Same keyword arguments as passed to validate method
+        """
+        pass
+
+    def post_validate(self, *args: Any, **kwargs: Any) -> None:
+        """Run after validation checks are run on a file.
+
+        This method is called once per file per validator after the validate method.
+        Override this method to perform per-file cleanup or processing operations.
+
+        Args:
+            *args: Same arguments as passed to validate method
+            **kwargs: Same keyword arguments as passed to validate method, plus:
+                - validation_output: ValidationOutputSchema result from validate method
+        """
+        pass
+
 
 class FileValidator(Validator):
     def __init__(self, config: Config):

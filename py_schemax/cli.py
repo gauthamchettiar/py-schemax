@@ -251,10 +251,23 @@ def validate(
 
     rb_validator = RuleSetBasedValidation(config, rulesets)
 
+    # Call pre_validate_all on all validators
+    rb_validator.pre_validate_all()
+
+    # Validate all files
     for path in file_paths:
         validation_output = rb_validator.validate_file(path)
         output.print_validation_output(validation_output)
 
+    # Determine exit code based on validation results
+    exit_code = 1 if output.summary.invalid_file_count > 0 else 0
+    if config.fail_mode == FailModeEnum.NEVER:
+        exit_code = 0
+
+    # Call post_validate_all with exit code
+    rb_validator.post_validate_all(exit_code)
+
+    # End control (this will handle the actual exit behavior)
     output.end_control()
 
 
