@@ -46,6 +46,7 @@ class RuleSetBasedValidation:
             validator.post_validate_all(exit_code=exit_code)
 
     def validate_file(self, file_path: str | Path) -> ValidationOutputSchema:
+        # Phase 0: check if provided file is valid, and parse json/yaml file to dict
         file_validator = FileValidator(self.__config)
         if (file_validator_output := file_validator.validate(file_path)).get(
             "valid", False
@@ -64,8 +65,6 @@ class RuleSetBasedValidation:
             validator_output = validator.validate(
                 file_validator.validated_content or {}, str(file_path)
             )
-
-            # If validation failed, merge with the final output
             if validator_output.get("valid", False) is False:
                 final_output = merge_validation_outputs(final_output, validator_output)
 

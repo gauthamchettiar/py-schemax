@@ -77,9 +77,14 @@ class Validator(ABC):
 
 
 class FileValidator(Validator):
-    def __init__(self, config: Config):
-        self.config: Config = config
-        self.__validated_content: dict | None = None
+    def __init__(self, config: Config) -> None:
+        """Initialize the FileValidator.
+
+        Args:
+            config: The configuration object
+        """
+        self.__config = config
+        self.__validated_content: dict[str, Any] | None = None
 
     def validate(self, file_path: str | Path) -> ValidationOutputSchema:
         path_str = str(file_path)
@@ -119,7 +124,7 @@ class FileValidator(Validator):
                     ],
                     "error_count": 1,
                 }
-        except (json.JSONDecodeError, yaml.YAMLError) as _:
+        except (json.JSONDecodeError, yaml.YAMLError) as e:
             return {
                 "file_path": path_str,
                 "valid": False,

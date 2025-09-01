@@ -9,6 +9,8 @@ from py_schemax.config import (
     DEFAULT_CONFIG_FILES,
     Config,
     FailModeEnum,
+    LogConfig,
+    LogLevelEnum,
     OutputFormatEnum,
     OutputLevelEnum,
     parse_config_files,
@@ -27,6 +29,7 @@ IGNORE_KEYS_FROM_CONFIG = [
     "output_level_silent",  # set using output_level
     "fail_fast",  # set using fail_mode
     "fail_never",  # set using fail_mode
+    "enable_debug_logging",  # set using log_level
 ]
 
 
@@ -155,6 +158,33 @@ def main() -> None:
     help="Ignore validation rules, only specified rules will be ignored",
     envvar="SCHEMAX_VALIDATE_RULE_IGNORE",
 )
+@click.option(
+    "--log-level",
+    "log_level",
+    type=click.Choice([e.value for e in LogLevelEnum]),
+    help="Set logging level",
+    envvar="SCHEMAX_LOG_LEVEL",
+)
+@click.option(
+    "--debug",
+    "enable_debug_logging",
+    is_flag=True,
+    help="Enable debug logging, equivalent to --log-level DEBUG",
+)
+@click.option(
+    "--log-file",
+    "enable_file_logging",
+    is_flag=True,
+    help="Enable logging to file",
+    envvar="SCHEMAX_ENABLE_FILE_LOGGING",
+)
+@click.option(
+    "--log-file-path",
+    "log_file_path",
+    type=click.Path(),
+    help="Path to log file (default: schemax.log)",
+    envvar="SCHEMAX_LOG_FILE_PATH",
+)
 @click.pass_context
 def validate(
     ctx: click.Context,
@@ -169,6 +199,10 @@ def validate(
     fail_never: bool,
     rule_apply: tuple[str, ...],
     rule_ignore: tuple[str, ...],
+    log_level: str,
+    enable_debug_logging: bool,
+    enable_file_logging: bool,
+    log_file_path: str,
 ) -> None:
     """Validate schema files against the defined Pydantic data model structure.
 
@@ -219,6 +253,9 @@ def validate(
       SCHEMAX_VALIDATE_OUTPUT_FORMAT    Set default output format (json|text)
       SCHEMAX_VALIDATE_OUTPUT_LEVEL     Set default verbosity (silent|quiet|verbose)
       SCHEMAX_VALIDATE_FAIL_MODE        Set default failure mode (fail_fast|fail_never|fail_after)
+      SCHEMAX_LOG_LEVEL                 Set default logging level (TRACE|DEBUG|INFO|WARNING|ERROR)
+      SCHEMAX_ENABLE_FILE_LOGGING       Enable logging to file (true|false)
+      SCHEMAX_LOG_FILE_PATH             Set log file path (default: schemax.log)
     """
     file_paths = accept_file_paths_as_stdin(file_paths)
 
@@ -234,6 +271,10 @@ def validate(
         fail_never=fail_never,
         model_required_attributes=default_map.get("model_required_attributes"),
         column_required_attributes=default_map.get("column_required_attributes"),
+        log_level=log_level,
+        enable_debug_logging=enable_debug_logging,
+        enable_file_logging=enable_file_logging,
+        log_file_path=log_file_path,
     )
 
     output = Output(config=config)
@@ -255,7 +296,7 @@ def validate(
     rb_validator.pre_validate_all()
 
     # Validate all files
-    for path in file_paths:
+    for i, path in enumerate(file_paths, 1):
         validation_output = rb_validator.validate_file(path)
         output.print_validation_output(validation_output)
 
