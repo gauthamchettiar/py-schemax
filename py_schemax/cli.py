@@ -171,17 +171,10 @@ def main() -> None:
     help="Enable debug logging, equivalent to --log-level DEBUG",
 )
 @click.option(
-    "--log-file",
-    "enable_file_logging",
-    is_flag=True,
-    help="Enable logging to file",
-    envvar="SCHEMAX_ENABLE_FILE_LOGGING",
-)
-@click.option(
     "--log-file-path",
     "log_file_path",
     type=click.Path(),
-    help="Path to log file (default: schemax.log)",
+    help="Path to log file (automatically enables file logging)",
     envvar="SCHEMAX_LOG_FILE_PATH",
 )
 @click.pass_context
@@ -200,7 +193,6 @@ def validate(
     rule_ignore: tuple[str, ...],
     log_level: str,
     enable_debug_logging: bool,
-    enable_file_logging: bool,
     log_file_path: str,
 ) -> None:
     """Validate schema files against the defined Pydantic data model structure.
@@ -253,28 +245,37 @@ def validate(
       SCHEMAX_VALIDATE_OUTPUT_LEVEL     Set default verbosity (silent|quiet|verbose)
       SCHEMAX_VALIDATE_FAIL_MODE        Set default failure mode (fail_fast|fail_never|fail_after)
       SCHEMAX_LOG_LEVEL                 Set default logging level (TRACE|DEBUG|INFO|WARNING|ERROR)
-      SCHEMAX_ENABLE_FILE_LOGGING       Enable logging to file (true|false)
-      SCHEMAX_LOG_FILE_PATH             Set log file path (default: schemax.log)
+      SCHEMAX_LOG_FILE_PATH             Set log file path (automatically enables file logging)
     """
     file_paths = accept_file_paths_as_stdin(file_paths)
 
     default_map = ctx.default_map or {}
-    config = Config(
-        output_format=output_format,
-        use_json=use_json,
-        output_level=output_level,
-        output_level_verbose=output_level_verbose,
-        output_level_silent=output_level_silent,
-        fail_mode=fail_mode,
-        fail_fast=fail_fast,
-        fail_never=fail_never,
-        model_required_attributes=default_map.get("model_required_attributes"),
-        column_required_attributes=default_map.get("column_required_attributes"),
-        log_level=log_level,
-        enable_debug_logging=enable_debug_logging,
-        enable_file_logging=enable_file_logging,
-        log_file_path=log_file_path,
+    config = (
+        Config()
+        .set_output_format(output_format=output_format, use_json=use_json)
+        .set_output_level(
+            output_level=output_level,
+            output_level_verbose=output_level_verbose,
+            output_level_silent=output_level_silent,
+        )
+        .set_fail_mode(
+            fail_mode=fail_mode,
+            fail_fast=fail_fast,
+            fail_never=fail_never,
+        )
+        .set_required_attributes(
+            model_required_attributes=default_map.get("model_required_attributes"),
+            column_required_attributes=default_map.get("column_required_attributes"),
+        )
+        .set_logging(
+            log_level=log_level,
+            enable_debug_logging=enable_debug_logging,
+            log_file_path=log_file_path,
+        )
     )
+
+    logger = config.logging.get_logger("schemax::main")
+    logger.debug(f"Final Resolved Config: {config.as_dict()}")
 
     output = Output(config=config)
 

@@ -139,7 +139,9 @@ class TestPydanticValidationErrors:
             "description": "This dataset is missing required fields.",
         }
         psv = PydanticSchemaValidator(
-            Config(model_required_attributes=["fqn", "columns"])
+            Config().set_required_attributes(
+                model_required_attributes=["fqn", "columns"]
+            )
         )
         result = psv.validate(inp, "")
         assert result["valid"] is False
@@ -165,7 +167,9 @@ class TestPydanticValidationErrors:
             ],
         }
         psv = PydanticSchemaValidator(
-            Config(column_required_attributes={data_type: ["name", "type"]})
+            Config().set_required_attributes(
+                column_required_attributes={data_type: ["name", "type"]}
+            )
         )
         result = psv.validate(inp, "")
         assert result["valid"] is False
