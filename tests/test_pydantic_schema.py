@@ -1,6 +1,6 @@
 import pytest
 
-from py_schemax.models import DatasetSchema, DataTypeUnion
+from py_schemax.model import DatasetSchema, DataTypeUnion
 
 
 def test_dataset_schema_with_required_fields_only(dataset_with_reqd_fields):
