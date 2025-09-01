@@ -2,7 +2,7 @@ import graphlib
 import json
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Any, List, Optional, TypedDict
 
 import yaml
 from pydantic import ValidationError
@@ -10,8 +10,32 @@ from pydantic_core import ErrorDetails
 
 from py_schemax.config import Config
 from py_schemax.model import SupportedDataTypes, get_dynamic_dataset_schema
-from py_schemax.schema.models import DatasetSchema
-from py_schemax.schema.validation import PydanticErrorSchema, ValidationOutputSchema
+from py_schemax.models import DatasetSchema
+
+
+class PydanticErrorSchema(TypedDict):
+    """Schema for Pydantic error details."""
+
+    type: str
+    msg: str
+
+
+class ValidationErrorSchema(TypedDict):
+    """Schema for error details."""
+
+    type: str
+    error_at: str
+    message: str
+    pydantic_error: Optional[PydanticErrorSchema]
+
+
+class ValidationOutputSchema(TypedDict):
+    """Schema for the output of the validate function."""
+
+    file_path: str
+    valid: bool
+    error_count: int
+    errors: List[ValidationErrorSchema]
 
 
 class Validator(ABC):

@@ -3,7 +3,6 @@ from pathlib import Path
 
 from py_schemax import config
 from py_schemax.config import Config
-from py_schemax.schema.validation import ValidationOutputSchema
 from py_schemax.utils import merge_validation_outputs
 from py_schemax.validator import (
     DependentsSchemaValidator,
@@ -11,6 +10,7 @@ from py_schemax.validator import (
     FileValidator,
     PydanticSchemaValidator,
     UniqueFQNValidator,
+    ValidationOutputSchema,
 )
 
 

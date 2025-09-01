@@ -5,7 +5,7 @@ from typing import Annotated, Dict, List, Optional, Type, Union, Unpack
 from pydantic import Discriminator, Field, create_model
 
 from py_schemax.config import Config
-from py_schemax.schema.models import (
+from py_schemax.models import (
     BaseDataType,
     BooleanType,
     DatasetSchema,

@@ -3,7 +3,7 @@
 import sys
 from typing import List
 
-from py_schemax.schema.validation import ValidationOutputSchema
+from py_schemax.validator import ValidationOutputSchema
 
 
 def accept_file_paths_as_stdin(file_paths: List[str]) -> List[str]:

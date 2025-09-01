@@ -4,8 +4,8 @@ import click
 from click.exceptions import Exit
 
 from py_schemax.config import Config, FailModeEnum, OutputFormatEnum, OutputLevelEnum
-from py_schemax.schema.validation import ValidationOutputSchema
 from py_schemax.summary import Summary
+from py_schemax.validator import ValidationOutputSchema
 
 
 class Output:
