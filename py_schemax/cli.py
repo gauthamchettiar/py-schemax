@@ -6,8 +6,8 @@ import click
 
 from py_schemax import __version__
 from py_schemax.config import (
-    DEFAULT_CONFIG_FILES,
     Config,
+    DefaultConfig,
     FailModeEnum,
     LogLevelEnum,
     OutputFormatEnum,
@@ -15,11 +15,7 @@ from py_schemax.config import (
     parse_config_files,
 )
 from py_schemax.output import Output
-from py_schemax.rulesets import (
-    DEFAULT_RULESETS,
-    RuleSetBasedValidation,
-    ValidationRuleSetEnum,
-)
+from py_schemax.rulesets import RuleSetBasedValidation, ValidationRuleSetEnum
 from py_schemax.utils import accept_file_paths_as_stdin
 
 IGNORE_KEYS_FROM_CONFIG = [
@@ -44,7 +40,7 @@ def parse_config_files_for(
         from_file_path, parsed_config = parse_config_files(file_paths, section_name)
 
         default_map.update(parsed_config)
-        if not default_map and list(file_paths) != list(DEFAULT_CONFIG_FILES):
+        if not default_map and list(file_paths) != list(DefaultConfig.config_files):
             raise click.BadParameter(
                 f"none of the provided config files are valid - {file_paths}"
             )
@@ -82,7 +78,7 @@ def main() -> None:
 @click.option(
     "--config",
     type=click.Path(dir_okay=False),
-    default=DEFAULT_CONFIG_FILES,
+    default=DefaultConfig.config_files,
     multiple=True,
     callback=parse_config_files_for("validate"),
     is_eager=True,
@@ -267,6 +263,10 @@ def validate(
             model_required_attributes=default_map.get("model_required_attributes"),
             column_required_attributes=default_map.get("column_required_attributes"),
         )
+        .set_rulesets(
+            rule_apply=rule_apply,
+            rule_ignore=rule_ignore,
+        )
         .set_logging(
             log_level=log_level,
             enable_debug_logging=enable_debug_logging,
@@ -279,18 +279,7 @@ def validate(
 
     output = Output(config=config)
 
-    rule_apply_enums = (
-        [ValidationRuleSetEnum[name] for name in rule_apply]
-        if rule_apply
-        else DEFAULT_RULESETS
-    )
-    rule_ignore_enums = (
-        [ValidationRuleSetEnum[name] for name in rule_ignore] if rule_ignore else []
-    )
-
-    rulesets = [rule for rule in rule_apply_enums if rule not in rule_ignore_enums]
-
-    rb_validator = RuleSetBasedValidation(config, rulesets)
+    rb_validator = RuleSetBasedValidation(config)
 
     rb_validator.pre_validate_all()
 

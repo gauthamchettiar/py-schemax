@@ -1,7 +1,6 @@
 from enum import Enum
 from pathlib import Path
 
-from py_schemax import config
 from py_schemax.config import Config
 from py_schemax.utils import merge_validation_outputs
 from py_schemax.validator import (
@@ -21,15 +20,13 @@ class ValidationRuleSetEnum(Enum):
     RV_DEPENDENTS = DependentsSchemaValidator
 
 
-DEFAULT_RULESETS = (ValidationRuleSetEnum.RV_SCHEMA,)
-
-
 class RuleSetBasedValidation:
     def __init__(
-        self, config: Config, apply_rules: list[ValidationRuleSetEnum]
+        self,
+        config: Config,
     ) -> None:
         self.__config = config
-        self.__validators = [rule.value(config) for rule in apply_rules]
+        self.__validators = [rule.value(config) for rule in config.rulesets]
 
     def pre_validate_all(self) -> None:
         """Call pre_validate_all on all validators."""

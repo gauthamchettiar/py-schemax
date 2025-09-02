@@ -2,9 +2,12 @@ import sys
 import tomllib
 from enum import Enum
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
 from loguru import logger
+
+if TYPE_CHECKING:
+    from py_schemax.rulesets import ValidationRuleSetEnum
 
 
 class OutputFormatEnum(Enum):
@@ -119,9 +122,6 @@ class LogConfig:
         return logger.bind(name=name)
 
 
-DEFAULT_CONFIG_FILES = ["schemax.toml", "pyproject.toml"]
-
-
 class DefaultConfig:
     """Default configuration values for py-schemax."""
 
@@ -130,6 +130,8 @@ class DefaultConfig:
     fail_mode = FailModeEnum.AFTER
     log_level = LogLevelEnum.INFO
     log_file_path = None
+    rulesets = ("RV_SCHEMA",)
+    config_files = ("schemax.toml", "pyproject.toml")
 
 
 class Config:
@@ -293,6 +295,29 @@ class Config:
         self.__logging.setup_logging()
         return self
 
+    def set_rulesets(
+        self,
+        rule_apply: tuple[str, ...] | None = None,
+        rule_ignore: tuple[str, ...] | None = None,
+    ) -> "Config":
+        """Set the rulesets for validation.
+
+        Args:
+            rule_apply: Tuple of rules to apply
+            rule_exclude: Tuple of rules to exclude
+
+        Returns:
+            Self for method chaining
+        """
+        from py_schemax.rulesets import ValidationRuleSetEnum
+
+        self.__rulesets = tuple(
+            ValidationRuleSetEnum[rule]
+            for rule in rule_apply or DefaultConfig.rulesets
+            if rule not in (rule_ignore or ())
+        )
+        return self
+
     @property
     def output_format(self) -> OutputFormatEnum:
         """Get the current output format."""
@@ -332,6 +357,11 @@ class Config:
     def logging(self) -> LogConfig:
         """Get the logging configuration."""
         return self.__logging
+
+    @property
+    def rulesets(self) -> tuple["ValidationRuleSetEnum", ...]:
+        """Get the current rulesets."""
+        return self.__rulesets
 
     def as_dict(self) -> dict[str, Any]:
         return {

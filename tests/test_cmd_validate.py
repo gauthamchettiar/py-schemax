@@ -7,7 +7,7 @@ import pytest
 from click.testing import CliRunner
 
 from py_schemax.cli import validate
-from py_schemax.config import DEFAULT_CONFIG_FILES
+from py_schemax.config import DefaultConfig
 
 _VALID_FILE_COUNT = 2
 _INVALID_FILE_COUNT = 6
@@ -578,7 +578,7 @@ class TestEnvVariables:
 
 
 class TestConfigFile:
-    @pytest.mark.parametrize("input_file", DEFAULT_CONFIG_FILES)
+    @pytest.mark.parametrize("input_file", DefaultConfig.config_files)
     def test_default_config_file_accepted(self, input_file):
         runner = CliRunner()
         with runner.isolated_filesystem():
