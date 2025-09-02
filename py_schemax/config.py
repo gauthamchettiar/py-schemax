@@ -372,6 +372,7 @@ class Config:
             "column_required_attributes": self.column_required_attributes,
             "log_level": self.log_level.value,
             "log_file_path": self.log_file_path,
+            "rulesets": [rule.name for rule in self.rulesets],
         }
 
 

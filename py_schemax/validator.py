@@ -44,6 +44,7 @@ class ValidationOutputSchema(TypedDict):
 class Validator(ABC):
     def __init__(self, config: Config):  # pragma: no cover
         self.config = config
+        self.logger = config.logging.get_logger(self.__class__.__name__)
 
     @abstractmethod
     def validate(
@@ -110,10 +111,11 @@ class FileValidator(Validator):
         Args:
             config: The configuration object
         """
-        self.__config = config
+        super().__init__(config)
         self.__validated_content: dict[str, Any] | None = None
 
     def validate(self, file_path: str | Path) -> ValidationOutputSchema:
+        self.logger.debug(f"Validating file: {file_path}")
         path_str = str(file_path)
         path = Path(file_path) if isinstance(file_path, str) else file_path
         if not path.exists():
@@ -165,6 +167,7 @@ class FileValidator(Validator):
                 ],
                 "error_count": 1,
             }
+        self.logger.debug(f"File validated successfully: {path_str}")
         return {
             "file_path": path_str,
             "valid": True,
@@ -180,10 +183,11 @@ class FileValidator(Validator):
 
 class PydanticSchemaValidator(Validator):
     def __init__(self, config: Config):
-        self.config: Config = config
+        super().__init__(config)
         self.dataset_schema: type[DatasetSchema] = get_dynamic_dataset_schema(config)
 
     def validate(self, data: dict, file_path: str) -> ValidationOutputSchema:
+        self.logger.debug(f"Validating schema of file: {file_path}")
         try:
             self.dataset_schema.model_validate(data)
         except ValidationError as e:
@@ -201,6 +205,7 @@ class PydanticSchemaValidator(Validator):
                 ],
                 "error_count": len(e.errors()),
             }
+        self.logger.debug(f"Schema validation successful for file: {file_path}")
         return {"file_path": file_path, "valid": True, "errors": [], "error_count": 0}
 
     def __strip_details(self, error: ErrorDetails) -> PydanticErrorSchema:
@@ -265,11 +270,13 @@ class PydanticSchemaValidator(Validator):
 
 class UniqueFQNValidator(Validator):
     def __init__(self, config: Config):
-        self.config: Config = config
+        super().__init__(config)
         self.__fqn_to_file_map: dict[str, str] = {}
 
     def validate(self, data: dict, file_path: str) -> ValidationOutputSchema:
         """Validate the uniqueness of FQNs across multiple validation outputs."""
+        self.logger.debug(f"Validating unique FQN for file: {file_path}")
+
         current_fqn: str | None = data.get("fqn")
 
         if current_fqn is None or not isinstance(current_fqn, str):
@@ -303,12 +310,15 @@ class UniqueFQNValidator(Validator):
             }
         self.__fqn_to_file_map[current_fqn] = file_path
 
+        self.logger.debug(
+            f"Unique FQN '{current_fqn}' registered for file: {file_path}"
+        )
         return {"file_path": file_path, "valid": True, "errors": [], "error_count": 0}
 
 
 class DependencyValidator(Validator):
     def __init__(self, config: Config):
-        self.config: Config = config
+        super().__init__(config)
         self.__sorted_graph: dict[str, list[str]] = {}
 
     def _validate_field_type(
@@ -370,6 +380,9 @@ class DependencyValidator(Validator):
     def _validate_for(
         self, field_name: str, data: dict, file_path: str
     ) -> ValidationOutputSchema:
+        self.logger.debug(
+            f"Validating dependents based on '{field_name}' for file: {file_path}"
+        )
         depends_on = data.get(field_name, [])
 
         if (error := self._validate_field_type(field_name, depends_on)) is not None:
@@ -395,7 +408,9 @@ class DependencyValidator(Validator):
 
         if (error := self._validate_circular_dependency(field_name)) is not None:
             return error
-
+        self.logger.debug(
+            f"Dependency validation based on '{field_name}' successful for file: {file_path}"
+        )
         return {"file_path": file_path, "valid": True, "errors": [], "error_count": 0}
 
     @abstractmethod

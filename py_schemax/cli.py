@@ -244,7 +244,7 @@ def validate(
       SCHEMAX_LOG_FILE_PATH             Set log file path (automatically enables file logging)
     """
     file_paths = accept_file_paths_as_stdin(file_paths)
-
+    file_path_count = len(file_paths)
     default_map = ctx.default_map or {}
     config = (
         Config()
@@ -274,7 +274,8 @@ def validate(
         )
     )
 
-    logger = config.logging.get_logger("schemax::main")
+    logger = config.logging.get_logger("schemax")
+    logger.info(f"Starting validation process for {file_path_count} files")
     logger.debug(f"Final Resolved Config: {config.as_dict()}")
 
     output = Output(config=config)
@@ -284,6 +285,9 @@ def validate(
     rb_validator.pre_validate_all()
 
     for i, path in enumerate(file_paths, 1):
+        logger.debug(
+            f"Starting validation process for file {i}/{file_path_count}: {path}"
+        )
         validation_output = rb_validator.validate_file(path)
         output.print_validation_output(validation_output)
 

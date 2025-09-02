@@ -14,7 +14,7 @@ class Output:
     ) -> None:
         self.__config = config or Config()
         self.__summary = summary or Summary()
-        self.__logger = self.__config.logging.get_logger("schemax::main")
+        self.__logger = self.__config.logging.get_logger("schemax")
 
     def __print_formatted_validation_output(
         self, validation_output: ValidationOutputSchema
