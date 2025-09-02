@@ -16,3 +16,19 @@ output_level = "verbose"
 # - never: never exit with error code (useful for CI/CD)
 # - after: validate all files then exit with error if any failed (default)
 fail_mode = "after"
+
+# Model-level required attributes
+# Specify which schema-level fields must be present for validation to pass
+# Available fields: name, fqn, description, version, columns, metadata, tags, depends_on, dependents
+model_required_attributes = ["name", "fqn", "columns"]
+
+# Column-level required attributes per data type
+# Specify which fields are required for each column type
+# This allows fine-grained control over validation requirements
+[schemax.validate.column_required_attributes]
+string = ["name", "type", "max_length"]
+integer = ["name", "type", "minimum", "maximum"]
+float = ["name", "type", "precision"]
+boolean = ["name", "type"]
+date = ["name", "type", "format"]
+datetime = ["name", "type", "format", "timezone"]

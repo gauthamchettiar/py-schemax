@@ -15,8 +15,10 @@ Other similar alternatives,
 ## ✨ Features
 
 - **Extensible Schema Validation**: Validate JSON and YAML schema files against robust Pydantic models. Easily extend validation rules by updating model attributes—no complex configuration required.
+- **Configurable Required Fields**: Control which schema and column attributes are required through configuration files, making validation flexible for different use cases and schema evolution.
 - **Unique FQN Validation**: Automatically detect and prevent duplicate Fully Qualified Names (FQNs) across multiple schema files in a single validation run.
-- **Modular Rule System**: Apply or ignore specific validation rules (`RV_SCHEMA` for schema validation, `RV_UNIQUE_FQN` for unique FQN validation) using CLI flags for flexible validation workflows.
+- **Schema Dependency Management**: Define and validate dependencies between schema files using `depends_on` and `dependents` fields. Automatically detect circular dependencies to ensure schema integrity.
+- **Modular Rule System**: Apply or ignore specific validation rules (`RV_SCHEMA` for schema validation, `RV_UNIQUE_FQN` for unique FQN validation, `RV_DEPENDS_ON`/`RV_DEPENDENTS` for dependency validation) using CLI flags for flexible validation workflows.
 - **Clear, Structured Error Reporting**: Detailed error messages with precise [JSONPath](https://jsonpath.com/) style locations and readable formatting make troubleshooting straightforward.
 - **Flexible CLI Output & Controls**: Choose between text or JSON output, adjust verbosity, and control exit codes for seamless integration with CI/CD workflows.
 - **Multiple Configuration Options**: Support for configuration files (INI/TOML), environment variables, and command-line flags with clear precedence rules.
@@ -54,6 +56,8 @@ SCHEMAX_VALIDATE_OUTPUT_FORMAT=json schemax validate schema.json  # Environment 
 # Control validation rules
 schemax validate --rule-apply RV_SCHEMA schema.json     # Only schema validation
 schemax validate --rule-ignore RV_UNIQUE_FQN schema.json    # Skip unique FQN validation
+schemax validate --rule-apply RV_DEPENDS_ON schema.json     # Only dependency validation
+schemax validate --rule-apply RV_DEPENDENTS schema.json     # Only dependents validation
 
 # See sample configuration files in the repository:
 # - sample.schemax.toml, sample.pyproject.toml, sample.env.sh
@@ -76,6 +80,11 @@ columns:
     nullable: false
     min_length: 3
     max_length: 50
+depends_on:
+  - common/base_schema.yaml
+  - auth/permissions.yaml
+dependents:
+  - analytics/user_events.yaml
 ```
 
 ## 📦 Dependencies

@@ -6,19 +6,16 @@ import click
 
 from py_schemax import __version__
 from py_schemax.config import (
-    DEFAULT_CONFIG_FILES,
     Config,
+    DefaultConfig,
     FailModeEnum,
+    LogLevelEnum,
     OutputFormatEnum,
     OutputLevelEnum,
     parse_config_files,
 )
 from py_schemax.output import Output
-from py_schemax.rulesets import (
-    DEFAULT_RULESETS,
-    RuleSetBasedValidation,
-    ValidationRuleSetEnum,
-)
+from py_schemax.rulesets import RuleSetBasedValidation, ValidationRuleSetEnum
 from py_schemax.utils import accept_file_paths_as_stdin
 
 IGNORE_KEYS_FROM_CONFIG = [
@@ -27,6 +24,7 @@ IGNORE_KEYS_FROM_CONFIG = [
     "output_level_silent",  # set using output_level
     "fail_fast",  # set using fail_mode
     "fail_never",  # set using fail_mode
+    "enable_debug_logging",  # set using log_level
 ]
 
 
@@ -42,7 +40,7 @@ def parse_config_files_for(
         from_file_path, parsed_config = parse_config_files(file_paths, section_name)
 
         default_map.update(parsed_config)
-        if not default_map and list(file_paths) != list(DEFAULT_CONFIG_FILES):
+        if not default_map and list(file_paths) != list(DefaultConfig.config_files):
             raise click.BadParameter(
                 f"none of the provided config files are valid - {file_paths}"
             )
@@ -80,7 +78,7 @@ def main() -> None:
 @click.option(
     "--config",
     type=click.Path(dir_okay=False),
-    default=DEFAULT_CONFIG_FILES,
+    default=DefaultConfig.config_files,
     multiple=True,
     callback=parse_config_files_for("validate"),
     is_eager=True,
@@ -155,6 +153,26 @@ def main() -> None:
     help="Ignore validation rules, only specified rules will be ignored",
     envvar="SCHEMAX_VALIDATE_RULE_IGNORE",
 )
+@click.option(
+    "--log-level",
+    "log_level",
+    type=click.Choice([e.value for e in LogLevelEnum]),
+    help="Set logging level",
+    envvar="SCHEMAX_LOG_LEVEL",
+)
+@click.option(
+    "--debug",
+    "enable_debug_logging",
+    is_flag=True,
+    help="Enable debug logging, equivalent to --log-level DEBUG",
+)
+@click.option(
+    "--log-file-path",
+    "log_file_path",
+    type=click.Path(),
+    help="Path to log file (automatically enables file logging)",
+    envvar="SCHEMAX_LOG_FILE_PATH",
+)
 @click.pass_context
 def validate(
     ctx: click.Context,
@@ -169,6 +187,9 @@ def validate(
     fail_never: bool,
     rule_apply: tuple[str, ...],
     rule_ignore: tuple[str, ...],
+    log_level: str,
+    enable_debug_logging: bool,
+    log_file_path: str,
 ) -> None:
     """Validate schema files against the defined Pydantic data model structure.
 
@@ -219,41 +240,62 @@ def validate(
       SCHEMAX_VALIDATE_OUTPUT_FORMAT    Set default output format (json|text)
       SCHEMAX_VALIDATE_OUTPUT_LEVEL     Set default verbosity (silent|quiet|verbose)
       SCHEMAX_VALIDATE_FAIL_MODE        Set default failure mode (fail_fast|fail_never|fail_after)
+      SCHEMAX_LOG_LEVEL                 Set default logging level (TRACE|DEBUG|INFO|WARNING|ERROR)
+      SCHEMAX_LOG_FILE_PATH             Set log file path (automatically enables file logging)
     """
     file_paths = accept_file_paths_as_stdin(file_paths)
-
+    file_path_count = len(file_paths)
     default_map = ctx.default_map or {}
-    config = Config(
-        output_format=output_format,
-        use_json=use_json,
-        output_level=output_level,
-        output_level_verbose=output_level_verbose,
-        output_level_silent=output_level_silent,
-        fail_mode=fail_mode,
-        fail_fast=fail_fast,
-        fail_never=fail_never,
-        model_required_attributes=default_map.get("model_required_attributes"),
-        column_required_attributes=default_map.get("column_required_attributes"),
+    config = (
+        Config()
+        .set_output_format(output_format=output_format, use_json=use_json)
+        .set_output_level(
+            output_level=output_level,
+            output_level_verbose=output_level_verbose,
+            output_level_silent=output_level_silent,
+        )
+        .set_fail_mode(
+            fail_mode=fail_mode,
+            fail_fast=fail_fast,
+            fail_never=fail_never,
+        )
+        .set_required_attributes(
+            model_required_attributes=default_map.get("model_required_attributes"),
+            column_required_attributes=default_map.get("column_required_attributes"),
+        )
+        .set_rulesets(
+            rule_apply=rule_apply,
+            rule_ignore=rule_ignore,
+        )
+        .set_logging(
+            log_level=log_level,
+            enable_debug_logging=enable_debug_logging,
+            log_file_path=log_file_path,
+        )
     )
+
+    logger = config.logging.get_logger("schemax")
+    logger.info(f"Starting validation process for {file_path_count} files")
+    logger.debug(f"Final Resolved Config: {config.as_dict()}")
 
     output = Output(config=config)
 
-    rule_apply_enums = (
-        [ValidationRuleSetEnum[name] for name in rule_apply]
-        if rule_apply
-        else DEFAULT_RULESETS
-    )
-    rule_ignore_enums = (
-        [ValidationRuleSetEnum[name] for name in rule_ignore] if rule_ignore else []
-    )
+    rb_validator = RuleSetBasedValidation(config)
 
-    rulesets = [rule for rule in rule_apply_enums if rule not in rule_ignore_enums]
+    rb_validator.pre_validate_all()
 
-    rb_validator = RuleSetBasedValidation(config, rulesets)
-
-    for path in file_paths:
+    for i, path in enumerate(file_paths, 1):
+        logger.debug(
+            f"Starting validation process for file {i}/{file_path_count}: {path}"
+        )
         validation_output = rb_validator.validate_file(path)
         output.print_validation_output(validation_output)
+
+    exit_code = 1 if output.summary.invalid_file_count > 0 else 0
+    if config.fail_mode == FailModeEnum.NEVER:
+        exit_code = 0
+
+    rb_validator.post_validate_all(exit_code)
 
     output.end_control()
 

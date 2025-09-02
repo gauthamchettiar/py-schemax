@@ -2,21 +2,49 @@ import graphlib
 import json
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Any, List, Optional, TypedDict
 
 import yaml
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
 from py_schemax.config import Config
-from py_schemax.model import SupportedDataTypes, get_dynamic_dataset_schema
-from py_schemax.schema.models import DatasetSchema
-from py_schemax.schema.validation import PydanticErrorSchema, ValidationOutputSchema
+from py_schemax.model import (
+    DatasetSchema,
+    SupportedDataTypes,
+    get_dynamic_dataset_schema,
+)
+
+
+class PydanticErrorSchema(TypedDict):
+    """Schema for Pydantic error details."""
+
+    type: str
+    msg: str
+
+
+class ValidationErrorSchema(TypedDict):
+    """Schema for error details."""
+
+    type: str
+    error_at: str
+    message: str
+    pydantic_error: Optional[PydanticErrorSchema]
+
+
+class ValidationOutputSchema(TypedDict):
+    """Schema for the output of the validate function."""
+
+    file_path: str
+    valid: bool
+    error_count: int
+    errors: List[ValidationErrorSchema]
 
 
 class Validator(ABC):
     def __init__(self, config: Config):  # pragma: no cover
         self.config = config
+        self.logger = config.logging.get_logger(self.__class__.__name__)
 
     @abstractmethod
     def validate(
@@ -24,13 +52,70 @@ class Validator(ABC):
     ) -> ValidationOutputSchema:  # pragma: no cover
         pass
 
+    def pre_validate_all(self, *args: Any, **kwargs: Any) -> None:
+        """Run before all validation checks are run on all files.
+
+        This method is called once per validator before any files are validated.
+        Override this method to perform setup operations that need to happen
+        before validation begins.
+
+        Args:
+            *args: Variable length argument list
+            **kwargs: Arbitrary keyword arguments
+        """
+        pass
+
+    def post_validate_all(self, *args: Any, **kwargs: Any) -> None:
+        """Run after all validation checks are run on all files.
+
+        This method is called once per validator after all files have been validated.
+        Override this method to perform cleanup operations or final processing.
+
+        Args:
+            *args: Variable length argument list
+            **kwargs: Arbitrary keyword arguments, including:
+                - exit_code: Final exit code indicating validation success/failure
+        """
+        pass
+
+    def pre_validate(self, *args: Any, **kwargs: Any) -> None:
+        """Run before validation checks are run on a file.
+
+        This method is called once per file per validator before the validate method.
+        Override this method to perform per-file setup operations.
+
+        Args:
+            *args: Same arguments as passed to validate method
+            **kwargs: Same keyword arguments as passed to validate method
+        """
+        pass
+
+    def post_validate(self, *args: Any, **kwargs: Any) -> None:
+        """Run after validation checks are run on a file.
+
+        This method is called once per file per validator after the validate method.
+        Override this method to perform per-file cleanup or processing operations.
+
+        Args:
+            *args: Same arguments as passed to validate method
+            **kwargs: Same keyword arguments as passed to validate method, plus:
+                - validation_output: ValidationOutputSchema result from validate method
+        """
+        pass
+
 
 class FileValidator(Validator):
-    def __init__(self, config: Config):
-        self.config: Config = config
-        self.__validated_content: dict | None = None
+    def __init__(self, config: Config) -> None:
+        """Initialize the FileValidator.
+
+        Args:
+            config: The configuration object
+        """
+        super().__init__(config)
+        self.__validated_content: dict[str, Any] | None = None
 
     def validate(self, file_path: str | Path) -> ValidationOutputSchema:
+        self.logger.debug(f"Validating file: {file_path}")
         path_str = str(file_path)
         path = Path(file_path) if isinstance(file_path, str) else file_path
         if not path.exists():
@@ -68,7 +153,7 @@ class FileValidator(Validator):
                     ],
                     "error_count": 1,
                 }
-        except (json.JSONDecodeError, yaml.YAMLError) as _:
+        except (json.JSONDecodeError, yaml.YAMLError) as e:
             return {
                 "file_path": path_str,
                 "valid": False,
@@ -82,6 +167,7 @@ class FileValidator(Validator):
                 ],
                 "error_count": 1,
             }
+        self.logger.debug(f"File validated successfully: {path_str}")
         return {
             "file_path": path_str,
             "valid": True,
@@ -97,10 +183,11 @@ class FileValidator(Validator):
 
 class PydanticSchemaValidator(Validator):
     def __init__(self, config: Config):
-        self.config: Config = config
+        super().__init__(config)
         self.dataset_schema: type[DatasetSchema] = get_dynamic_dataset_schema(config)
 
     def validate(self, data: dict, file_path: str) -> ValidationOutputSchema:
+        self.logger.debug(f"Validating schema of file: {file_path}")
         try:
             self.dataset_schema.model_validate(data)
         except ValidationError as e:
@@ -118,6 +205,7 @@ class PydanticSchemaValidator(Validator):
                 ],
                 "error_count": len(e.errors()),
             }
+        self.logger.debug(f"Schema validation successful for file: {file_path}")
         return {"file_path": file_path, "valid": True, "errors": [], "error_count": 0}
 
     def __strip_details(self, error: ErrorDetails) -> PydanticErrorSchema:
@@ -182,11 +270,13 @@ class PydanticSchemaValidator(Validator):
 
 class UniqueFQNValidator(Validator):
     def __init__(self, config: Config):
-        self.config: Config = config
+        super().__init__(config)
         self.__fqn_to_file_map: dict[str, str] = {}
 
     def validate(self, data: dict, file_path: str) -> ValidationOutputSchema:
         """Validate the uniqueness of FQNs across multiple validation outputs."""
+        self.logger.debug(f"Validating unique FQN for file: {file_path}")
+
         current_fqn: str | None = data.get("fqn")
 
         if current_fqn is None or not isinstance(current_fqn, str):
@@ -220,12 +310,15 @@ class UniqueFQNValidator(Validator):
             }
         self.__fqn_to_file_map[current_fqn] = file_path
 
+        self.logger.debug(
+            f"Unique FQN '{current_fqn}' registered for file: {file_path}"
+        )
         return {"file_path": file_path, "valid": True, "errors": [], "error_count": 0}
 
 
 class DependencyValidator(Validator):
     def __init__(self, config: Config):
-        self.config: Config = config
+        super().__init__(config)
         self.__sorted_graph: dict[str, list[str]] = {}
 
     def _validate_field_type(
@@ -287,6 +380,9 @@ class DependencyValidator(Validator):
     def _validate_for(
         self, field_name: str, data: dict, file_path: str
     ) -> ValidationOutputSchema:
+        self.logger.debug(
+            f"Validating dependents based on '{field_name}' for file: {file_path}"
+        )
         depends_on = data.get(field_name, [])
 
         if (error := self._validate_field_type(field_name, depends_on)) is not None:
@@ -312,7 +408,9 @@ class DependencyValidator(Validator):
 
         if (error := self._validate_circular_dependency(field_name)) is not None:
             return error
-
+        self.logger.debug(
+            f"Dependency validation based on '{field_name}' successful for file: {file_path}"
+        )
         return {"file_path": file_path, "valid": True, "errors": [], "error_count": 0}
 
     @abstractmethod

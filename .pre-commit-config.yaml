@@ -48,7 +48,8 @@ repos:
           types-PyYAML,
           pydantic,
           click,
-          pydantic-core
+          pydantic-core,
+          loguru
         ]
         args: [--config-file=pyproject.toml]
         files: ^py_schemax/
